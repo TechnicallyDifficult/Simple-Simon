@@ -6,7 +6,7 @@ function playIntro() {
     var redOn = false;
     var count = 0;
     var intervalId = setInterval(function () {
-        if (count <= 50) {
+        if (count < 60) {
             if (!redOn) {
                 $("#red-button").addClass("lit");
                 redOn = true;
@@ -15,6 +15,7 @@ function playIntro() {
                 redOn = false;
             }
             count++;
+            console.log(count);
         } else {
             console.log("Intro over.");
             clearInterval(intervalId);
@@ -24,9 +25,9 @@ function playIntro() {
 
 $("#red-button").click(function() {
     console.log("Button was clicked!");
-    gameState = "intro";
     if (gameState == "idle") {
         $("#red-button").removeClass("btn-enabled");
+        gameState = "intro";
         playIntro();
     }
 });
