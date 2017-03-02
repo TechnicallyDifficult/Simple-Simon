@@ -1,7 +1,8 @@
 'use strict';
 
 var gameState = 'idle',
-    buttonSequence = [];
+    buttonSequence = [],
+    currentIndex = 0;
 
 
 function getRandomInt(min, max) {
@@ -87,6 +88,19 @@ $('.game-button').click(function() {
             }
         } else {
             $(this).removeClass('btn-lit');
+        }
+    } else if (gameState == 'playerTurn') {
+        if (this.id == buttonSequence[currentIndex][0].id) {
+            console.log('You clicked the correct button!');
+            currentIndex++;
+            if (currentIndex == buttonSequence.length) {
+                $('.game-button').removeClass('btn-enabled');
+                gameState = 'computerTurn';
+                currentIndex = 0;
+                setTimeout(computerTurn, 700);
+            }
+        } else {
+            console.log('You clicked the wrong button!');
         }
     }
 });

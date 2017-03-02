@@ -10,10 +10,7 @@
     background-color: #EF766C;
 }
 
-.r-button.btn-enabled:hover {
-    background-color: #EF766C;
-}
-
 .r-button.btn-enabled:active {
     box-shadow: 0 8px 8px rgba(0,0,0,0.4) inset;
+    background-color: #EF766C;
 }
