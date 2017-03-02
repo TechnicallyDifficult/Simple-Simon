@@ -37,8 +37,40 @@ function playIntro() {
             // end the intro and proceed to the next phase of the game
             clearInterval(intervalId);
             gameState = 'computerTurn';
+            setTimeout(computerTurn, 700);
         }
     }, 35);
+}
+
+function computerTurn() {
+    console.log('Starting computer turn...')
+    buttonSequence.push(chooseButton());
+    playSequence(buttonSequence.length, 0);
+}
+
+function playSequence(runCount, i) {
+    if (i < runCount) {
+        // first, light up the button at the current index
+        buttonSequence[i].addClass('btn-lit');
+        // then wait for 700ms before darkening it again
+        setTimeout(function () {
+            buttonSequence[i].removeClass('btn-lit');
+            i++;
+            // after another 700ms, run through all this again
+            setTimeout(function () {
+                playSequence(runCount, i);
+            }, 700);
+        }, 700);
+    // once finished playing the entire sequence...
+    } else {
+        gameState = 'playerTurn'
+        playerTurn();
+    }
+}
+
+function playerTurn() {
+    console.log('starting player turn...')
+    $('.game-button').addClass('btn-enabled');
 }
 
 $('.game-button').click(function() {
