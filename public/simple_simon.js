@@ -1,8 +1,21 @@
 'use strict';
 
-var gameState = 'idle';
-var buttonChosen;
+var gameState = 'idle',
+    buttonSequence = [];
 
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function chooseButton() {
+    // first generate a random number between 0 and the number of buttons on the page
+    var buttonIndex = getRandomInt(0, $('.game-button').length);
+    // then find and return the button whose index matches the generated number
+    return $('.game-button:eq(' + buttonIndex + ')');
+}
 
 function playIntro() {
     var buttonOn = false;
@@ -11,10 +24,7 @@ function playIntro() {
     var intervalId = setInterval(function () {
         if (count < 60) {
             if (!buttonOn) {
-                // generate a random interger between 0 and the number of buttons on the page
-                buttonChosen = getRandomInt(0, $('.game-button').length);
-                // then, out of all the buttons on the page, find the one whose index matches the generated number and light it up
-                $('.game-button:eq(' + buttonChosen + ')').addClass('btn-lit');
+                chooseButton().addClass('btn-lit');
                 buttonOn = true;
             } else {
                 // if there are any buttons lit up, make them dark again
@@ -29,12 +39,6 @@ function playIntro() {
             gameState = 'computerTurn';
         }
     }, 35);
-}
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
 }
 
 $('.game-button').click(function() {
@@ -54,3 +58,4 @@ $('.game-button').click(function() {
         }
     }
 });
+
