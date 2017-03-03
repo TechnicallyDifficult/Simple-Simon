@@ -28,7 +28,7 @@ function playIntro() {
         chosenButton;
     // the intro should cause the buttons to rapidly blink in a randomized order
     var intervalId = setInterval(function () {
-        if (count < 60) {
+        if (count < 40) {
             // on each interval, if a button isn't lit, choose one and light it. Otherwise, turn off the previously lit button
             if (!chosenButton) {
                 chosenButton = chooseButton();
@@ -45,7 +45,7 @@ function playIntro() {
             gameState = 'computerTurn';
             setTimeout(computerTurn, 500);
         }
-    }, 35);
+    }, 50);
 }
 
 function computerTurn() {
