@@ -75,11 +75,8 @@ function playSequence(runCount, i) {
 }
 
 function playerTurn() {
-    console.log('Starting player turn...')
-    // enable all the buttons again
-    for (var i = 0; i < buttonCount; i++) {
-        buttons.addClass('enabled-btn');
-    }
+    console.log('Starting player turn...');
+    $(buttons).addClass('enabled-btn');
 }
 
 function addButton() {
@@ -87,15 +84,19 @@ function addButton() {
     switch (buttonCount) {
         case 1:
             $('#r-btn').animate({
+                // first, the red button morphs into a rectangle with about half its initial width
                 'border-radius': '0%',
                 'width': '220px'
             }, 700).animate({
+                // then it morphs into a semicircle
                 'border-top-left-radius': '444px',
                 'border-bottom-left-radius': '444px'
             }, 700, function () {
-                $('#y-btn').animate({
+                // finally, the yellow button is unhidden and slides into play
+                $('#y-btn').removeClass('hidden').animate({
                     'top': '0'
                 }, 500, function () {
+                    // when the animation finishes, after a brief delay, start the computer's turn again
                     setTimeout(computerTurn, 300);
                 });
             });
@@ -103,22 +104,25 @@ function addButton() {
             break;
         case 2:
             $('#r-btn').animate({
+                // first, the red button morphs into a quarter-circle
                 'border-bottom-left-radius': '0',
                 'height': '220px'
-            }, 700).animate({
-                'border-top-left-radius': '220px'
             }, 700);
             $('#y-btn').animate({
+                // at the same time as the red one, the yellow button does the same
                 'border-bottom-right-radius': '0',
                 'height': '220px'
-            }, 700).animate({
-                'border-top-right-radius': '220px'
             }, 700, function () {
-                $('#g-btn').animate({
+                $('#g-btn').removeClass('hidden').animate({
+                    // when the yellow button's animation finishes (both buttons should finish at the same time), the green button is unhidden and slides into play
                     'left': '0'
-                }, 500);
-                $('#b-btn').animate({
+                }, 700);
+                $('#b-btn').removeClass('hidden').animate({
+                    // at the same time as the green one, the blue button does the same from the other side
                     'right': '4px'
+                }, 700, function () {
+                    // when the animation finishes, after a brief delay, start the computer's turn again
+                    setTimeout(computerTurn, 500);
                 });
             });
             buttonCount = 4;
