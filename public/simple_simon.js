@@ -135,13 +135,14 @@ function addButton() {
 }
 
 function failureSequence() {
+    gameState = 'failure';
     buttons.toggleClass('enabled-btn lit-btn');
     setTimeout(function () {
-        buttons.toggleClass('enabled-btn lit-btn');
-        gameState = 'idle';
         buttonSequence = [];
         currentIndex = 0;
         currentRound = 1;
+        gameState = 'idle';
+        buttons.toggleClass('enabled-btn lit-btn');
     }, 1500);
 }
 
@@ -158,20 +159,14 @@ function successSequence() {
         // otherwise, play the normal success animation and proceed to the computer's turn
         var count = 0;
         var intervalId = setInterval(function () {
-            if (count < 10) {
-                if (!buttonsOn) {
-                    buttons.addClass('lit-btn');
-                    buttonsOn = true;
-                } else {
-                    buttons.removeClass('lit-btn');
-                    buttonsOn = false;
-                }
+            if (count < 20) {
+                buttons.toggleClass('lit-btn');
                 count++;
             } else {
                 clearInterval(intervalId);
                 setTimeout(computerTurn, 400);
             }
-        }, 100);
+        }, 50);
     }
 }
 
