@@ -58,14 +58,14 @@
     background-color: #34a853;
     border-color: #267B3D;
     border-bottom-left-radius: 220px;
-    left: -999px;
+    left: -2000px;
 }
 
 #b-btn {
     background-color: #4285f4;
     border-color: #3161B2;
     border-bottom-right-radius: 220px;
-    right: -9999px;
+    right: -2000px;
 }
 
 .lit-btn#r-btn, .enabled-btn#r-btn:active {

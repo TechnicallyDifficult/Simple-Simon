@@ -43,7 +43,7 @@ function playIntro() {
             // end the intro and proceed to the next phase of the game
             clearInterval(intervalId);
             gameState = 'computerTurn';
-            setTimeout(computerTurn, 700);
+            setTimeout(computerTurn, 500);
         }
     }, 35);
 }
@@ -65,8 +65,8 @@ function playSequence(runCount, i) {
             // after another 700ms, run through all this again
             setTimeout(function () {
                 playSequence(runCount, i);
-            }, 700);
-        }, 700);
+            }, 500);
+        }, 500);
     // once finished playing the entire sequence...
     } else {
         gameState = 'playerTurn'
@@ -127,6 +127,18 @@ function addButton() {
     buttons = $('.game-btn');
 }
 
+function failureSequence() {
+    console.log('You clicked the wrong button!');
+    buttons.toggleClass('enabled-btn lit-btn');
+    setTimeout(function () {
+        buttons.toggleClass('enabled-btn lit-btn');
+        gameState = 'idle';
+        buttonSequence = [];
+        currentIndex = 0;
+        currentRound = 1;
+    }, 1500);
+}
+
 buttons.click(function() {
     if (gameState == 'idle') {
         // Is the button clicked lit up?
@@ -143,6 +155,7 @@ buttons.click(function() {
         }
         if (buttonsOn) {
             buttons.removeClass('enabled-btn lit-btn');
+            buttonsOn = false;
             gameState = 'intro';
             playIntro();
         }
@@ -157,17 +170,15 @@ buttons.click(function() {
                 currentIndex = 0;
                 currentRound++;
                 console.log('Round: ' + currentRound);
-                if (currentRound % 3 == 0 && buttonCount < 4) {
+                // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
+                if ((currentRound % 3 == 0 && buttonCount < 2) || (currentRound % 6 == 0 && buttonCount < 4)) {
                     addButton();
                 } else { 
                     setTimeout(computerTurn, 700);
                 }
             }
         } else {
-            console.log('You clicked the wrong button!');
-            gameState = 'idle';
-            buttonSequence = [];
-            currentRound = 1;
+            failureSequence();
         }
     }
 });
