@@ -5,6 +5,7 @@ var gameState = 'idle',
     currentIndex = 0,
     currentRound = 1,
     buttons = $('.game-btn'),
+    buttonCount = 1,
     buttonsOn = false;
 
 
@@ -16,7 +17,7 @@ function getRandomInt(min, max) {
 
 function chooseButton() {
     // first generate a random number between 0 and the number of buttons on the page
-    var buttonIndex = getRandomInt(0, buttons.length);
+    var buttonIndex = getRandomInt(0, buttonCount);
     // then find and return the button whose index matches the generated number
     return buttons[buttonIndex];
 }
@@ -76,16 +77,15 @@ function playSequence(runCount, i) {
 function playerTurn() {
     console.log('Starting player turn...')
     // enable all the buttons again
-    for (var i = 0; i < buttons.length; i++) {
+    for (var i = 0; i < buttonCount; i++) {
         buttons.addClass('enabled-btn');
     }
 }
 
 function addButton() {
     console.log('Adding button...');
-    switch ($('.game-btn').length) {
+    switch (buttonCount) {
         case 1:
-            $('.container').append('<div id="y-btn" class="game-btn"></div>');
             $('#r-btn').animate({
                 'border-radius': '0%',
                 'width': '220px'
@@ -95,8 +95,33 @@ function addButton() {
             }, 700, function () {
                 $('#y-btn').animate({
                     'top': '0'
-                }, 500);
+                }, 500, function () {
+                    setTimeout(computerTurn, 300);
+                });
             });
+            buttonCount = 2;
+            break;
+        case 2:
+            $('#r-btn').animate({
+                'border-bottom-left-radius': '0',
+                'height': '220px'
+            }, 700).animate({
+                'border-top-left-radius': '220px'
+            }, 700);
+            $('#y-btn').animate({
+                'border-bottom-right-radius': '0',
+                'height': '220px'
+            }, 700).animate({
+                'border-top-right-radius': '220px'
+            }, 700, function () {
+                $('#g-btn').animate({
+                    'left': '0'
+                }, 500);
+                $('#b-btn').animate({
+                    'right': '4px'
+                });
+            });
+            buttonCount = 4;
             break;
     }
     buttons = $('.game-btn');
@@ -107,7 +132,16 @@ buttons.click(function() {
         // Is the button clicked lit up?
         $(this).toggleClass('lit-btn');
         // Are all buttons now lit up?
-        if (buttons.hasClass('lit-btn')) {
+        for (var i = 0; i < buttonCount; i++) {
+            // if at any point a button that is off is encountered...
+            if (!$(buttons[i]).hasClass('lit-btn')) {
+                buttonsOn = false;
+                break;
+            } else {
+                buttonsOn = true;
+            }
+        }
+        if (buttonsOn) {
             buttons.removeClass('enabled-btn lit-btn');
             gameState = 'intro';
             playIntro();
@@ -123,7 +157,7 @@ buttons.click(function() {
                 currentIndex = 0;
                 currentRound++;
                 console.log('Round: ' + currentRound);
-                if (currentRound % 3 == 0 && $('.game-btn').length < 4) {
+                if (currentRound % 3 == 0 && buttonCount < 4) {
                     addButton();
                 } else { 
                     setTimeout(computerTurn, 700);
@@ -131,6 +165,9 @@ buttons.click(function() {
             }
         } else {
             console.log('You clicked the wrong button!');
+            gameState = 'idle';
+            buttonSequence = [];
+            currentRound = 1;
         }
     }
 });
