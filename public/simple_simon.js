@@ -68,12 +68,8 @@ function playSequence(runCount, i) {
     // once finished playing the entire sequence...
     } else {
         gameState = 'playerTurn'
-        playerTurn();
+        buttons.addClass('enabled-btn');
     }
-}
-
-function playerTurn() {
-    $(buttons).addClass('enabled-btn');
 }
 
 function addButton() {
