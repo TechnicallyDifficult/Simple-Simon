@@ -23,9 +23,9 @@ function chooseButton() {
 }
 
 function playIntro() {
-    console.log('Playing intro...')
-    var count = 0,
-        chosenButton;
+    // a counter for determining when to stop the intro animation
+    var count = 0;
+    var chosenButton;
     // the intro should cause the buttons to rapidly blink in a randomized order
     var intervalId = setInterval(function () {
         if (count < 40) {
@@ -39,7 +39,6 @@ function playIntro() {
             }
             count++;
         } else {
-            console.log('Intro over.');
             // end the intro and proceed to the next phase of the game
             clearInterval(intervalId);
             gameState = 'computerTurn';
@@ -49,7 +48,6 @@ function playIntro() {
 }
 
 function computerTurn() {
-    console.log('Starting computer turn...')
     buttonSequence.push(chooseButton());
     playSequence(buttonSequence.length, 0);
 }
@@ -75,12 +73,10 @@ function playSequence(runCount, i) {
 }
 
 function playerTurn() {
-    console.log('Starting player turn...');
     $(buttons).addClass('enabled-btn');
 }
 
 function addButton() {
-    console.log('Adding button...');
     switch (buttonCount) {
         case 1:
             $('#r-btn').animate({
@@ -132,7 +128,6 @@ function addButton() {
 }
 
 function failureSequence() {
-    console.log('You clicked the wrong button!');
     buttons.toggleClass('enabled-btn lit-btn');
     setTimeout(function () {
         buttons.toggleClass('enabled-btn lit-btn');
@@ -141,6 +136,36 @@ function failureSequence() {
         currentIndex = 0;
         currentRound = 1;
     }, 1500);
+}
+
+function successSequence() {
+    // just like with the intro, a counter for determining when to stop the success animation
+    buttons.removeClass('enabled-btn');
+    gameState = 'computerTurn';
+    currentIndex = 0;
+    currentRound++;
+    // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
+    if ((currentRound % 3 == 0 && buttonCount < 2) || (currentRound % 6 == 0 && buttonCount < 4)) {
+        addButton();
+    } else {
+        // otherwise, play the normal success animation and proceed to the computer's turn
+        var count = 0;
+        var intervalId = setInterval(function () {
+            if (count < 10) {
+                if (!buttonsOn) {
+                    buttons.addClass('lit-btn');
+                    buttonsOn = true;
+                } else {
+                    buttons.removeClass('lit-btn');
+                    buttonsOn = false;
+                }
+                count++;
+            } else {
+                clearInterval(intervalId);
+                setTimeout(computerTurn, 400);
+            }
+        }, 100);
+    }
 }
 
 buttons.click(function() {
@@ -166,20 +191,10 @@ buttons.click(function() {
     } else if (gameState == 'playerTurn') {
         // if the ID of the button clicked matches the one in the current index of the array
         if ($(this).attr('id') == buttonSequence[currentIndex].id) {
-            console.log('You clicked the correct button!');
             currentIndex++;
+            // if the player has finished clicking the buttons in the correct order...
             if (currentIndex == buttonSequence.length) {
-                buttons.removeClass('enabled-btn');
-                gameState = 'computerTurn';
-                currentIndex = 0;
-                currentRound++;
-                console.log('Round: ' + currentRound);
-                // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
-                if ((currentRound % 3 == 0 && buttonCount < 2) || (currentRound % 6 == 0 && buttonCount < 4)) {
-                    addButton();
-                } else { 
-                    setTimeout(computerTurn, 700);
-                }
+                successSequence();
             }
         } else {
             failureSequence();
