@@ -9,7 +9,6 @@
 
 body {
     user-select: none;
-    text-align: center;
     font-size: 0;
 }
 
@@ -18,11 +17,11 @@ body {
 }
 
 .button-container {
-    /*margin: 0 auto;*/
-    display: inline-block;
-/*    height: 444px;
-    width: 444px;*/
+    display: block;
+    height: 444px;
+    width: 444px;
     position: relative;
+    left: 278px;
 }
 
 .game-btn {
@@ -71,6 +70,12 @@ body {
     border-color: #3161B2;
     border-bottom-right-radius: 220px;
     right: -2000px;
+}
+
+#field {
+    width: 1000px;
+    height: 600px;
+    margin: 0 auto;
 }
 
 .lit-btn#r-btn, .enabled-btn#r-btn:active {

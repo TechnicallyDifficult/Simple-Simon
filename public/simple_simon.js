@@ -7,7 +7,11 @@ var gameState = 'idle',
     buttons = $('.game-btn'),
     buttonContainer = $('#button-container'),
     buttonCount = 1,
-    buttonsOn = false;
+    buttonsOn = false,
+    x = ($('#field').width() / 2) - 16,
+    y = ($('#field').height() / 2) - 16,
+    dx = 1,
+    dy = 1;
 
 
 function getRandomInt(min, max) {
@@ -84,16 +88,9 @@ function addButton() {
                 // then it morphs into a semicircle
                 'border-top-left-radius': '444px',
                 'border-bottom-left-radius': '444px'
-            }, 700).animate({
-                // and then moves slightly to the left
-                'left': '-111px'
             }, 700, function () {
                 // finally, the yellow button is unhidden and slides into play
-                $('#y-btn').removeClass('hidden');
-                // the red button has its CSS changed slightly so that it doesn't appear to jump to the left after the yellow button is unhidden
-                $('#r-btn').css('left', '0');
-                // and then the yellow button slides into play
-                $('#y-btn').animate({
+                $('#y-btn').removeClass('hidden').animate({
                     'top': '0'
                 }, 500, function () {
                     // when the animation finishes, after a brief delay, start the computer's turn again
@@ -174,15 +171,25 @@ function gameTransition() {
         'border-width': '1px'
     }, 700);
     buttonContainer.addClass('rotating').animate({
-        'top': '206px'
+        'height': '32px',
+        'width': '32px',
+        'top': y,
+        'left': x
     }, 700);
 }
 
-function moveUp() {
-    buttonContainer.animate({
-        'top': '100px'
-    });
+function draw() {
+    var intervalId = setInterval(function () {
+        x += dx;
+        y += dy;
+        buttonContainer.animate({
+            'top': y,
+            'left': x
+        }, 10);
+    }, 10);
 }
+
+function breakout() {}
 
 buttons.click(function() {
     if (gameState == 'idle') {
