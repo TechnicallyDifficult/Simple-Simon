@@ -245,7 +245,16 @@ function initializeBricks() {
             'data-bottom': setHitbox(index, 'bottom')
         });
     });
-    // var intervalId = setInterval(function () {});
+    $('#bricks-container').removeClass('hidden');
+    var i = 0;
+    var intervalId = setInterval(function () {
+        if (i < 30) {
+            $('.brick').eq(i).removeClass('hidden');
+            i++;
+        } else {
+            clearInterval(intervalId);
+        }
+    }, 100);
 }
 
 function breakout() {}
