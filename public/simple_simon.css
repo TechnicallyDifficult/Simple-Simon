@@ -16,14 +16,6 @@ body {
     animation: rotating 2s linear infinite;
 }
 
-.button-container {
-    display: block;
-    height: 444px;
-    width: 444px;
-    position: relative;
-    left: 278px;
-}
-
 .game-btn {
     height: 444px;
     width: 444px;
@@ -38,15 +30,40 @@ body {
     box-shadow: 0 16px 16px rgba(0,0,0,0.4) inset;
 }
 
-#r-btn {
+.brick {
+    border: 2px solid;
+    display: inline-block;
+    height: 32px;
+    width: 100px;
+    position: relative;
+    top: 20px;
+}
+
+.red {
     background-color: #ea4335;
     border-color: #AB3127;
+}
+
+.yellow {
+    background-color: #fbbc05;
+    border-color: #B78904;
+}
+
+.green {
+    background-color: #34a853;
+    border-color: #267B3D;
+}
+
+.blue {
+    background-color: #4285f4;
+    border-color: #3161B2;
+}
+
+#r-btn {
     border-radius: 50%;
 }
 
 #y-btn {
-    background-color: #fbbc05;
-    border-color: #B78904;
     width: 220px;
     border-top-right-radius: 444px;
     border-bottom-right-radius: 444px;
@@ -59,15 +76,11 @@ body {
 }
 
 #g-btn {
-    background-color: #34a853;
-    border-color: #267B3D;
     border-bottom-left-radius: 220px;
     left: -2000px;
 }
 
 #b-btn {
-    background-color: #4285f4;
-    border-color: #3161B2;
     border-bottom-right-radius: 220px;
     right: -2000px;
 }
@@ -76,6 +89,21 @@ body {
     width: 1000px;
     height: 600px;
     margin: 0 auto;
+    position: relative;
+}
+
+#button-container {
+    display: block;
+    height: 444px;
+    width: 444px;
+    position: relative;
+    top: 78px;
+    left: 278px;
+}
+
+#bricks-container {
+    position: absolute;
+    padding-top: 20px;
 }
 
 .lit-btn#r-btn, .enabled-btn#r-btn:active {

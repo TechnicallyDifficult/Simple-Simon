@@ -195,9 +195,62 @@ function draw() {
     }, 10);
 }
 
+function chooseColor() {
+    switch (getRandomInt(1, 5)) {
+        case 1:
+            return 'red';
+        case 2:
+            return 'yellow';
+        case 3:
+            return 'green';
+        case 4:
+            return 'blue';
+    }
+}
+
+function setHitbox(index, side) {
+    var position,
+        indexString = index.toString();
+    switch (side) {
+        case 'left':
+            position = parseInt(indexString.substring(indexString.length - 1));
+            return position * 100;
+        case 'top':
+            if (indexString.length == 1) {
+                return 20;
+            } else {
+                position = parseInt(indexString.substring(0));
+                return (position * 32) + 20;
+            }
+        case 'right':
+            position = parseInt(indexString.substring(indexString.length - 1));
+            return (position + 1) * 100;
+        case 'bottom':
+            if (indexString.length == 1) {
+                return 52;
+            } else {
+                position = parseInt(indexString.substring(0));
+                return ((position + 1) * 32) + 20;
+            }
+    }
+
+}
+
+function initializeBricks() {
+    $('.brick').each(function (index, element) {
+        $(element).addClass(chooseColor()).attr({
+            'data-left': setHitbox(index, 'left'),
+            'data-top': setHitbox(index, 'top'),
+            'data-right': setHitbox(index, 'right'),
+            'data-bottom': setHitbox(index, 'bottom')
+        });
+    });
+    // var intervalId = setInterval(function () {});
+}
+
 function breakout() {}
 
-buttons.click(function() {
+buttons.click(function () {
     if (gameState == 'idle') {
         // Is the button clicked lit up?
         $(this).toggleClass('lit-btn');
