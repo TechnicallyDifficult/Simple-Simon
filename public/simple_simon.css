@@ -1,11 +1,11 @@
 body {
-    text-align: center;
+    font-size: 0;
     user-select: none;
+    text-align: center;
 }
 
 .button-container {
-    margin: 0, auto;
-    display: block;
+    display: inline-block;
 }
 
 .game-btn {
@@ -34,14 +34,12 @@ body {
     width: 220px;
     border-top-right-radius: 444px;
     border-bottom-right-radius: 444px;
-    left: -4px;
     top: -999px;
 }
 
 #g-btn, #b-btn {
     height: 220px;
     width: 220px;
-    top: -5px;
 }
 
 #g-btn {
