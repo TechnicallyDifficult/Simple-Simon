@@ -1,11 +1,27 @@
+@keyframes rotating {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 body {
-    text-align: center;
     user-select: none;
+    text-align: center;
+}
+
+.rotating {
+    animation: rotating 2s linear infinite;
 }
 
 .button-container {
-    margin: 0, auto;
-    display: block;
+    /*margin: 0 auto;*/
+    display: inline-block;
+/*    height: 444px;
+    width: 444px;*/
+    position: relative;
 }
 
 .game-btn {
