@@ -3,9 +3,9 @@ body {
     user-select: none;
 }
 
-.main-container {
-    margin: auto;
-    display: inline-block;
+.button-container {
+    margin: 0, auto;
+    display: block;
 }
 
 .game-btn {
