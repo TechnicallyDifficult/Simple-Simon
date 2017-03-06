@@ -1,5 +1,6 @@
 body {
     text-align: center;
+    user-select: none;
 }
 
 .main-container {
@@ -16,26 +17,6 @@ body {
     margin: 0;
     position: relative;
 }
-
-.pie {
-    position: relative;
-    margin: 1em auto;
-    border: dashed 1px;
-    padding: 0;
-    width: 32em; height: 32em;
-    border-radius: 50%;
-    list-style: none;
-}
-
-/*.slice {
-    overflow: hidden;
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 50%;
-    height: 50%;
-    transform-origin: 0% 100%;
-}*/
 
 .enabled-btn:active {
     box-shadow: 0 16px 16px rgba(0,0,0,0.4) inset;
