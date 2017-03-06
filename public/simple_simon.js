@@ -111,7 +111,7 @@ function addButton() {
                 }, 700);
                 $('#b-btn').removeClass('hidden').animate({
                     // at the same time as the green one, the blue button does the same from the other side
-                    'right': '4px'
+                    'right': '0'
                 }, 700, function () {
                     // when the animation finishes, after a brief delay, start the computer's turn again
                     setTimeout(computerTurn, 500);
