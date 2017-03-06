@@ -180,6 +180,12 @@ function gameTransition() {
 
 function draw() {
     var intervalId = setInterval(function () {
+        if (y + dy > $('#field').height() || y + dy < 0) {
+            dy = -dy;
+        }
+        if (x + dx > $('#field').width() || x + dx < 0) {
+            dx = -dx;
+        }
         x += dx;
         y += dy;
         buttonContainer.animate({
