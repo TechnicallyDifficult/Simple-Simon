@@ -83,9 +83,16 @@ function addButton() {
                 // then it morphs into a semicircle
                 'border-top-left-radius': '444px',
                 'border-bottom-left-radius': '444px'
+            }, 700).animate({
+                // and then moves slightly to the left
+                'left': '-111px'
             }, 700, function () {
                 // finally, the yellow button is unhidden and slides into play
-                $('#y-btn').removeClass('hidden').animate({
+                $('#y-btn').removeClass('hidden');
+                // the red button has its CSS changed slightly so that it doesn't appear to jump to the left after the yellow button is unhidden
+                $('#r-btn').css('left', '0');
+                // and then the yellow button slides into play
+                $('#y-btn').animate({
                     'top': '0'
                 }, 500, function () {
                     // when the animation finishes, after a brief delay, start the computer's turn again
