@@ -5,6 +5,7 @@ var gameState = 'idle',
     currentIndex = 0,
     currentRound = 1,
     buttons = $('.game-btn'),
+    buttonContainer = $('#button-container'),
     buttonCount = 1,
     buttonsOn = false;
 
@@ -171,8 +172,16 @@ function gameTransition() {
         'height': '16px',
         'width': '16px',
         'border-width': '1px'
-    }, 500);
-    $('#button-container').addClass('rotating');
+    }, 700);
+    buttonContainer.addClass('rotating').animate({
+        'top': '206px'
+    }, 700);
+}
+
+function moveUp() {
+    buttonContainer.animate({
+        'top': '100px'
+    });
 }
 
 buttons.click(function() {
