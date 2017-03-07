@@ -175,7 +175,9 @@ body {
 }
 
 #lives-container {
-    position: absolute;
+    position: fixed;
+    top: 2px;
+    left: 2px;
 }
 
 .lit-btn#r-btn, .enabled-btn#r-btn:active {

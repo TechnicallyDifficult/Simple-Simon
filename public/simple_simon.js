@@ -13,7 +13,9 @@ var gameState = 'idle',
     dx = 1,
     dy = 1,
     bricksInitialized = false,
-    paddleX = ($('#field').width / 2);
+    paddleX = ($('#field').width() / 2),
+    lives = 3,
+    ballMoveInterval;
 
 
 function getRandomInt(min, max) {
@@ -203,24 +205,28 @@ function draw() {
         }
         $('#paddle').css('left', paddleX);
     });
-    var intervalId = setInterval(function () {
+    ballMoveInterval = setInterval(function () {
+        console.log(ballMoveInterval);
         checkBrickCollision();
         checkPaddleCollision();
-        if (y + dy > $('#field').height() - 32 || y + dy < 0) {
+        if (y + dy < 0) {
             dy = -dy;
         }
         if (x + dx > $('#field').width() - 32 || x + dx < 0) {
             dx = -dx;
+        }
+        if (y + dy > $('#field').height() - 32) {
+            dx = 0;
+            dy = 0;
+            loseLife();
         }
         x += dx;
         y += dy;
         buttonContainer.css({
             'top': y,
             'left': x
-        }, 1);
-        $('#x').text(x);
-        $('#y').text(y);
-    }, 7);
+        });
+    }, 8);
 }
 
 function chooseColor() {
@@ -330,6 +336,56 @@ function showPaddle() {
         'bottom': '0px',
     }, 700, function () {
         setTimeout(draw, 300);
+    });
+}
+
+function loseLife() {
+    shrinkBall(buttonContainer);
+    setTimeout(function () {
+        if (lives > 0) {
+            if (lives == 3) {
+                shrinkBall($('#life-2'));
+            } else if (lives == 2) {
+                shrinkBall($('#life-1'));
+            }
+            setTimeout(function () {
+                x = ($('#field').width() / 2);
+                y = ($('#field').height() / 2);
+                console.log('hi');
+                buttonContainer.removeClass('hidden');
+                buttonContainer.animate({
+                    'height': '32px',
+                    'width': '32px'
+                }, 300);
+                buttons.animate({
+                    'height': '16px',
+                    'width': '16px'
+                }, 300, function () {
+                    setTimeout(function () {
+                        dx = 1;
+                        dy = 1;
+                    }, 1000);
+                });
+            }, 800);
+            lives--;
+        } else {
+            clearInterval(ballMoveInterval);
+        }
+    }, 500);
+}
+
+function shrinkBall(ball) {
+    ball.children().animate({
+        'height': '0px',
+        'width': '0px'
+    }, 500)
+    ball.animate({
+        'height': '0px',
+        'width': '0px',
+        'top': parseInt(ball.attr('top')) + 16,
+        'left': parseInt(ball.attr('left')) + 16
+    }, 500, function () {
+        ball.addClass('hidden');
     });
 }
 
