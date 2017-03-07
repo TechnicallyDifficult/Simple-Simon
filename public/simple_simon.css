@@ -116,10 +116,12 @@ p {
 
 #paddle {
     background-color: #4D5057;
-    border: 2px solid black;
-    height: 24px;
-    width: 128px;
+    border: 2px solid #393B40;
+    height: 0;
+    width: 0;
     position: relative;
+    bottom: 12px;
+    left: 564px;
 }
 
 #field {

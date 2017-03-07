@@ -193,6 +193,16 @@ function gameTransition() {
 }
 
 function draw() {
+    $(document).mousemove(function(event) {
+        if (event.pageX < $('#field').offset().left + 64) {
+            paddleX = 0;
+        } else if (event.pageX > $('#field').offset().left + 936) {
+            paddleX = 872;
+        } else {
+            paddleX = event.pageX - $('#field').offset().left - 64;
+        }
+        $('#paddle').css('left', paddleX);
+    });
     var intervalId = setInterval(function () {
         checkBrickCollision();
         checkPaddleCollision();
@@ -274,7 +284,7 @@ function initializeBricks() {
             i++;
         } else {
             clearInterval(intervalId);
-            setTimeout(draw, 300);
+            setTimeout(showPaddle, 300);
         }
     }, 100);
 }
@@ -304,7 +314,14 @@ function checkPaddleCollision() {
 }
 
 function showPaddle() {
-    $('#paddle').removeClass('hidden');
+    $('#paddle').removeClass('hidden').animate({
+        'height': '24px',
+        'width': '128px',
+        'left': '500px',
+        'bottom': '0px',
+    }, 700, function () {
+        setTimeout(draw, 300);
+    });
 }
 
 function breakout() {}
@@ -341,15 +358,4 @@ buttons.click(function () {
             failureSequence();
         }
     }
-});
-
-$(document).mousemove(function(event) {
-    if (event.pageX < $('#field').offset().left + 64) {
-        paddleX = 0;
-    } else if (event.pageX > $('#field').offset().left + 936) {
-        paddleX = 872;
-    } else {
-        paddleX = event.pageX - $('#field').offset().left - 64;
-    }
-    $('#paddle').css('left', paddleX);
 });
