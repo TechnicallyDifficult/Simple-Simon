@@ -151,7 +151,7 @@ $(document).ready(function () {
         currentIndex = 0;
         currentRound++;
         // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
-        if ((currentRound % 3 == 0 && buttonCount < 2) || (currentRound % 6 == 0 && buttonCount < 4)) {
+        if ((currentRound == 3 && buttonCount < 2) || (currentRound 6 && buttonCount < 4)) {
             addButton();
         } else {
             // otherwise, play the normal success animation and proceed to the computer's turn
