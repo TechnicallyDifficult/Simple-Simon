@@ -280,7 +280,12 @@ function checkBrickCollision() {
 }
 
 function checkPaddleCollision() {
-    if (y + dy > 546 - 32 && y + dy < 570 && x + dx > paddleX && x + dx < paddleX + 128) {
+    if (y + dy > 514 && y + dy < 570 && x + dx + 32 > paddleX && x + dx < paddleX + 128) {
+        if (!(x < paddleX + 128) || (x + dx + 32 > paddleX + 96)) {
+            dx = 1;
+        } else if (!(x + 32 > paddleX) || (x + dx < paddleX + 32)) {
+            dx = -1;
+        }
         dy = -dy;
     }
 }
