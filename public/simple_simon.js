@@ -198,7 +198,7 @@ function draw() {
         }, 1);
         $('#x').text(x);
         $('#y').text(y);
-    }, 10);
+    }, 7);
 }
 
 function chooseColor() {
@@ -268,11 +268,11 @@ function initializeBricks() {
 
 function checkBrickCollision() {
     $('.active-brick').each(function (index, element) {
-        if (y + dy > parseInt($(element).attr('data-top')) - 32 && x + dx < $(element).attr('data-right') && y + dy < parseInt($(element).attr('data-bottom')) + 16 && x + dx > $(element).attr('data-left')) {
+        if (y + dy + 16 > $(element).attr('data-top') && x + dx < $(element).attr('data-right') && y + dy - 16 < $(element).attr('data-bottom') && x + dx + 32 > $(element).attr('data-left')) {
             $(element).removeClass('active-brick').addClass('hidden-brick');
-            if (!(y > parseInt($(element).attr('data-top')) - 32) || !(y < parseInt($(element).attr('data-bottom')) + 16)) {
+            if (!(y + 16 > $(element).attr('data-top')) || !(y - 16 < $(element).attr('data-bottom'))) {
                 dy = -dy;
-            } else if (!(x < $(element).attr('data-right')) || !(x > $(element).attr('data-left'))) {
+            } else if (!(x < $(element).attr('data-right')) || !(x + 32 > $(element).attr('data-left'))) {
                 dx = -dx;
             }
         }
