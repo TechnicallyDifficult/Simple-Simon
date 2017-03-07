@@ -8,8 +8,8 @@ var gameState = 'idle',
     buttonContainer = $('#button-container'),
     buttonCount = 1,
     buttonsOn = false,
-    x = ($('#field').width() / 2) - 16,
-    y = ($('#field').height() / 2) - 16,
+    x = ($('#field').width() / 2),
+    y = ($('#field').height() / 2),
     dx = 1,
     dy = 1;
 
@@ -180,7 +180,7 @@ function gameTransition() {
 
 function draw() {
     var intervalId = setInterval(function () {
-        // checkBrickCollision();
+        checkBrickCollision();
         if (y + dy > $('#field').height() - 32 || y + dy < 0) {
             dy = -dy;
         }
@@ -192,7 +192,7 @@ function draw() {
         buttonContainer.css({
             'top': y,
             'left': x
-        });
+        }, 1);
         $('#x').text(x);
         $('#y').text(y);
     }, 10);
@@ -222,7 +222,7 @@ function setHitbox(index, side) {
             if (indexString.length == 1) {
                 return 20;
             } else {
-                position = parseInt(indexString.substring(0));
+                position = parseInt(indexString.substring(0, 1));
                 return (position * 32) + 20;
             }
         case 'right':
@@ -232,7 +232,7 @@ function setHitbox(index, side) {
             if (indexString.length == 1) {
                 return 52;
             } else {
-                position = parseInt(indexString.substring(0));
+                position = parseInt(indexString.substring(0, 1));
                 return ((position + 1) * 32) + 20;
             }
     }
@@ -247,7 +247,7 @@ function initializeBricks() {
             'data-bottom': setHitbox(index, 'bottom')
         });
     });
-    $('#bricks-container').removeClass('hidden');
+    $('#bricks-container').removeClass('hidden hidden-brick');
     var i = 0;
     var intervalId = setInterval(function () {
         if (i < 30) {
@@ -260,14 +260,20 @@ function initializeBricks() {
 }
 
 function checkBrickCollision() {
-    $('.brick').each(function (index, element) {
-        if (y + dy > $(element).attr('data-top') && x + dx < $(element).attr('data-right') && y + dy < $(element).attr('data-bottom') && x + dx > $(element).attr('data-left')) {
-            if (!(y > $(element).attr('data-top')) || !(y < $(element).attr('data-bottom'))) {
+    $('.active-brick').each(function (index, element) {
+        if (y + dy > $(element).attr('data-top') && x + dx < $(element).attr('data-right') && y + dy < parseInt($(element).attr('data-bottom')) + 16 && x + dx > $(element).attr('data-left')) {
+            $(element).removeClass('active-brick').addClass('hidden-brick');
+            if (!(y > $(element).attr('data-top')) || !(y < parseInt($(element).attr('data-bottom')) + 16)) {
                 console.log('if');
                 console.log(element);
+                console.log(x);
+                console.log(y);
                 dy = -dy;
             } else if (!(x < $(element).attr('data-right')) || !(x > $(element).attr('data-left'))) {
                 console.log('else');
+                console.log(element);
+                console.log(x);
+                console.log(y);
                 dx = -dx;
             }
         }

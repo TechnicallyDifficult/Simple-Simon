@@ -64,6 +64,11 @@ p {
     border-color: #3161B2;
 }
 
+.hidden-brick {
+    border: none;
+    background-color: transparent;
+}
+
 #r-btn {
     border-radius: 50%;
 }
@@ -95,7 +100,6 @@ p {
     height: 600px;
     margin: 0 auto;
     position: relative;
-    background-color: black;
 }
 
 #button-container {
