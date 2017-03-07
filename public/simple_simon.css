@@ -21,11 +21,6 @@ body {
     font-size: 0;
 }
 
-p {
-    position: absolute;
-    font-size: 14px;
-}
-
 .rotating {
     animation: rotating 2s linear infinite;
 }
@@ -38,6 +33,40 @@ p {
     padding: 0;
     margin: 0;
     position: relative;
+}
+
+.life-corner {
+    height: 0px;
+    width: 0px;
+    border: 1px solid;
+    float: left;
+    padding: 0;
+    margin: 0;
+}
+
+.corner-top-left {
+    border-top-left-radius: 32px;
+}
+
+.corner-top-right {
+    border-top-right-radius: 32px;
+}
+
+.corner-bottom-left {
+    border-bottom-left-radius: 32px;
+    clear: left;
+}
+
+.corner-bottom-right {
+    border-bottom-right-radius: 32px;
+}
+
+.life {
+    margin: 0 8px;
+    display: inline-block;
+    position: relative;
+    top: 16px;
+    left: 16px;
 }
 
 .enabled-btn:active {
@@ -143,6 +172,10 @@ p {
 #bricks-container {
     position: absolute;
     padding-top: 20px;
+}
+
+#lives-container {
+    position: absolute;
 }
 
 .lit-btn#r-btn, .enabled-btn#r-btn:active {

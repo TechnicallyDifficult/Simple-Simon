@@ -6,7 +6,20 @@
         <link rel="stylesheet" href="./simple_simon.css">
     </head>
     <body>
-        <p>x: <span id="x"></span><br>y: <span id="y"></span></p>
+        <div id="lives-container">
+            <div id="life-1" class="life rotating hidden">
+                <div class="life-corner red corner-top-left"></div>
+                <div class="life-corner yellow corner-top-right"></div>
+                <div class="life-corner green corner-bottom-left"></div>
+                <div class="life-corner blue corner-bottom-right"></div>
+            </div>
+            <div id="life-2" class="life rotating hidden">
+                <div class="life-corner red corner-top-left"></div>
+                <div class="life-corner yellow corner-top-right"></div>
+                <div class="life-corner green corner-bottom-left"></div>
+                <div class="life-corner blue corner-bottom-right"></div>
+            </div>
+        </div>
         <div id="field">
             <div id="bricks-container" class="hidden">
                 <div class="brick hidden active-brick"></div>

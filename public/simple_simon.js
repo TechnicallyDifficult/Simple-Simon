@@ -314,6 +314,15 @@ function checkPaddleCollision() {
 }
 
 function showPaddle() {
+    $('.life').removeClass('hidden').addClass('rotating')
+    $('.life').animate({
+        'top': '0px',
+        'left': '0px',
+    }, 500);
+    $('.life-corner').animate({
+        'height': '16px',
+        'width': '16px'
+    }, 700);
     $('#paddle').removeClass('hidden').animate({
         'height': '24px',
         'width': '128px',
