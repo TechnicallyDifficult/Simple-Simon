@@ -149,8 +149,12 @@ function successSequence() {
     currentIndex = 0;
     currentRound++;
     // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
-    if ((currentRound % 3 == 0 && buttonCount < 2) || (currentRound % 6 == 0 && buttonCount < 4)) {
+    if ((currentRound == 3 && buttonCount < 2) || (currentRound == 6 && buttonCount < 4)) {
         addButton();
+    // on round 10, begin transition into breakout
+    } else if (currentRound == 10) {
+        gameState = 'breakout';
+        gameTransition();
     } else {
         // otherwise, play the normal success animation and proceed to the computer's turn
         var count = 0;
@@ -167,17 +171,25 @@ function successSequence() {
 }
 
 function gameTransition() {
-    buttons.animate({
-        'height': '16px',
-        'width': '16px',
-        'border-width': '1px'
-    }, 700);
-    buttonContainer.addClass('rotating').animate({
-        'height': '32px',
-        'width': '32px',
-        'top': y,
-        'left': x
-    }, 700);
+    $('body').addClass('fade-to-black');
+    setTimeout(function () {
+        $('body').css('background-color', 'black');
+        setTimeout(function () {
+            buttons.animate({
+                'height': '16px',
+                'width': '16px',
+                'border-width': '1px'
+            }, 700);
+            buttonContainer.addClass('rotating').animate({
+                'height': '32px',
+                'width': '32px',
+                'top': y,
+                'left': x
+            }, 700, function () {
+                setTimeout(initializeBricks, 500);
+            });
+        }, 300);
+    }, 1000);
 }
 
 function draw() {
@@ -262,6 +274,7 @@ function initializeBricks() {
             i++;
         } else {
             clearInterval(intervalId);
+            setTimeout(draw, 300);
         }
     }, 100);
 }
@@ -331,7 +344,6 @@ buttons.click(function () {
 });
 
 $(document).mousemove(function(event) {
-    $('#x').text(event.pageX);
     if (event.pageX < $('#field').offset().left + 64) {
         paddleX = 0;
     } else if (event.pageX > $('#field').offset().left + 936) {

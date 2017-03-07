@@ -7,6 +7,15 @@
     }
 }
 
+@keyframes fadeToBlack {
+    from {
+        background-color: white;
+    }
+    to {
+        background-color: black;
+    }
+}
+
 body {
     user-select: none;
     font-size: 0;
@@ -69,6 +78,10 @@ p {
     background-color: transparent;
 }
 
+.fade-to-black {
+    animation: fadeToBlack 1s linear 1;
+}
+
 #r-btn {
     border-radius: 50%;
 }
@@ -114,7 +127,6 @@ p {
     height: 600px;
     margin: 0 auto;
     position: relative;
-    background-color: black;
 }
 
 #button-container {
