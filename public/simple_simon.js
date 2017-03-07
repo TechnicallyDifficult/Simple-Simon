@@ -180,11 +180,11 @@ function gameTransition() {
 
 function draw() {
     var intervalId = setInterval(function () {
-        checkBrickCollision();
-        if (y + dy > $('#field').height() || y + dy < 0) {
+        // checkBrickCollision();
+        if (y + dy > $('#field').height() - 32 || y + dy < 0) {
             dy = -dy;
         }
-        if (x + dx > $('#field').width() || x + dx < 0) {
+        if (x + dx > $('#field').width() - 32 || x + dx < 0) {
             dx = -dx;
         }
         x += dx;
