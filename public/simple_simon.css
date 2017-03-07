@@ -12,6 +12,11 @@ body {
     font-size: 0;
 }
 
+p {
+    position: absolute;
+    font-size: 14px;
+}
+
 .rotating {
     animation: rotating 2s linear infinite;
 }
@@ -90,6 +95,7 @@ body {
     height: 600px;
     margin: 0 auto;
     position: relative;
+    background-color: black;
 }
 
 #button-container {

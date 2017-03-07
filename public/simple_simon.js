@@ -180,6 +180,7 @@ function gameTransition() {
 
 function draw() {
     var intervalId = setInterval(function () {
+        checkBrickCollision();
         if (y + dy > $('#field').height() || y + dy < 0) {
             dy = -dy;
         }
@@ -188,10 +189,12 @@ function draw() {
         }
         x += dx;
         y += dy;
-        buttonContainer.animate({
+        buttonContainer.css({
             'top': y,
             'left': x
-        }, 10);
+        });
+        $('#x').text(x);
+        $('#y').text(y);
     }, 10);
 }
 
@@ -233,7 +236,6 @@ function setHitbox(index, side) {
                 return ((position + 1) * 32) + 20;
             }
     }
-
 }
 
 function initializeBricks() {
@@ -255,6 +257,21 @@ function initializeBricks() {
             clearInterval(intervalId);
         }
     }, 100);
+}
+
+function checkBrickCollision() {
+    $('.brick').each(function (index, element) {
+        if (y + dy > $(element).attr('data-top') && x + dx < $(element).attr('data-right') && y + dy < $(element).attr('data-bottom') && x + dx > $(element).attr('data-left')) {
+            if (!(y > $(element).attr('data-top')) || !(y < $(element).attr('data-bottom'))) {
+                console.log('if');
+                console.log(element);
+                dy = -dy;
+            } else if (!(x < $(element).attr('data-right')) || !(x > $(element).attr('data-left'))) {
+                console.log('else');
+                dx = -dx;
+            }
+        }
+    });
 }
 
 function breakout() {}
