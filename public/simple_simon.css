@@ -95,11 +95,26 @@ p {
     right: -2000px;
 }
 
+#paddle-container {
+    position: absolute;
+    bottom: 30px;
+    width: 1000px;
+}
+
+#paddle {
+    background-color: #4D5057;
+    border: 2px solid black;
+    height: 24px;
+    width: 128px;
+    position: relative;
+}
+
 #field {
     width: 1000px;
     height: 600px;
     margin: 0 auto;
     position: relative;
+    background-color: black;
 }
 
 #button-container {

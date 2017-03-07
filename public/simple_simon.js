@@ -11,7 +11,9 @@ var gameState = 'idle',
     x = ($('#field').width() / 2),
     y = ($('#field').height() / 2),
     dx = 1,
-    dy = 1;
+    dy = 1,
+    bricksInitialized = false,
+    paddleX = ($('#field').width / 2);
 
 
 function getRandomInt(min, max) {
@@ -181,6 +183,7 @@ function gameTransition() {
 function draw() {
     var intervalId = setInterval(function () {
         checkBrickCollision();
+        checkPaddleCollision();
         if (y + dy > $('#field').height() - 32 || y + dy < 0) {
             dy = -dy;
         }
@@ -240,18 +243,22 @@ function setHitbox(index, side) {
 
 function initializeBricks() {
     $('.brick').each(function (index, element) {
-        $(element).addClass(chooseColor()).attr({
-            'data-left': setHitbox(index, 'left'),
-            'data-top': setHitbox(index, 'top'),
-            'data-right': setHitbox(index, 'right'),
-            'data-bottom': setHitbox(index, 'bottom')
-        });
+        $(element).addClass(chooseColor());
+        if (!bricksInitialized) {
+            $(element).attr({
+                'data-left': setHitbox(index, 'left'),
+                'data-top': setHitbox(index, 'top'),
+                'data-right': setHitbox(index, 'right'),
+                'data-bottom': setHitbox(index, 'bottom')
+            });
+        }
     });
-    $('#bricks-container').removeClass('hidden hidden-brick');
+    bricksInitialized = true;
+    $('#bricks-container').removeClass('hidden');
     var i = 0;
     var intervalId = setInterval(function () {
         if (i < 30) {
-            $('.brick').eq(i).removeClass('hidden');
+            $('.brick').eq(i).removeClass('hidden hidden-brick');
             i++;
         } else {
             clearInterval(intervalId);
@@ -261,23 +268,25 @@ function initializeBricks() {
 
 function checkBrickCollision() {
     $('.active-brick').each(function (index, element) {
-        if (y + dy > $(element).attr('data-top') && x + dx < $(element).attr('data-right') && y + dy < parseInt($(element).attr('data-bottom')) + 16 && x + dx > $(element).attr('data-left')) {
+        if (y + dy > parseInt($(element).attr('data-top')) - 32 && x + dx < $(element).attr('data-right') && y + dy < parseInt($(element).attr('data-bottom')) + 16 && x + dx > $(element).attr('data-left')) {
             $(element).removeClass('active-brick').addClass('hidden-brick');
-            if (!(y > $(element).attr('data-top')) || !(y < parseInt($(element).attr('data-bottom')) + 16)) {
-                console.log('if');
-                console.log(element);
-                console.log(x);
-                console.log(y);
+            if (!(y > parseInt($(element).attr('data-top')) - 32) || !(y < parseInt($(element).attr('data-bottom')) + 16)) {
                 dy = -dy;
             } else if (!(x < $(element).attr('data-right')) || !(x > $(element).attr('data-left'))) {
-                console.log('else');
-                console.log(element);
-                console.log(x);
-                console.log(y);
                 dx = -dx;
             }
         }
     });
+}
+
+function checkPaddleCollision() {
+    if (y + dy > 546 - 32 && y + dy < 570 && x + dx > paddleX && x + dx < paddleX + 128) {
+        dy = -dy;
+    }
+}
+
+function showPaddle() {
+    $('#paddle').removeClass('hidden');
 }
 
 function breakout() {}
@@ -314,4 +323,16 @@ buttons.click(function () {
             failureSequence();
         }
     }
+});
+
+$(document).mousemove(function(event) {
+    $('#x').text(event.pageX);
+    if (event.pageX < $('#field').offset().left + 64) {
+        paddleX = 0;
+    } else if (event.pageX > $('#field').offset().left + 936) {
+        paddleX = 872;
+    } else {
+        paddleX = event.pageX - $('#field').offset().left - 64;
+    }
+    $('#paddle').css('left', paddleX);
 });
