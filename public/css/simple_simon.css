@@ -180,6 +180,13 @@ body {
     left: 2px;
 }
 
+#round-counter {
+    position: fixed;
+    top: 0px;
+    right: 8px;
+    font-size: 30px;
+}
+
 .lit-btn#r-btn, .enabled-btn#r-btn:active {
     background-color: #EF766C;
 }
