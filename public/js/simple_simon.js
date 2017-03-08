@@ -258,7 +258,7 @@ function breakout() {
     }
 
     // this function has two main parts
-    function initializeBricks() {
+    function initializeBricks(complete) {
         $('.brick').each(function (index, element) {
             // first, a random color is given to each brick
             $(element).addClass(chooseColor());
@@ -278,12 +278,15 @@ function breakout() {
         // here, a setInterval function is used to show the bricks one by one in a rapid succession (but not all at once) for increased visual appeal
         var intervalId = setInterval(function () {
             if (i < 30) {
-                $('.brick').eq(i).removeClass('hidden hidden-brick');
+                $('.brick').eq(i).removeClass('hidden hidden-brick').addClass('active-brick');
                 i++;
             } else {
                 // after all of them have appeared, clear the interval and move on to showing the paddle...
                 clearInterval(intervalId);
                 // ...unless this has already happened before
+                if (typeof complete == 'function') {
+                    complete();
+                } 
                 if (!bricksInitialized) {
                     setTimeout(showPaddle, 300);
                 }
@@ -314,10 +317,19 @@ function breakout() {
     }
 
     function roundProgress() {
+        bricksBroken = 0;
+        currentRound++;
+        gameState = 'breakoutRoundProgress';
+        // freeze the ball's position
         dx = 0;
         dy = 0;
         setTimeout(function () {
-            shrinkBall(buttonContainer, false);
+            shrinkBall(buttonContainer, false, function () {
+                initializeBricks(function () {
+                    $('#round-counter').text(currentRound);
+                    resetBall();
+                });
+            });
         });
     }
 
@@ -451,6 +463,7 @@ function breakout() {
     }
 
     function draw() {
+        gameState = 'breakout';
         // this event listener is included in this function so that the paddle does not start moving until this function is called
         // it is what allows the mouse to control the paddle
         $(document).mousemove(function(event) {
