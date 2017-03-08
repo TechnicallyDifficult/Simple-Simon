@@ -62,8 +62,10 @@ body {
 }
 
 .life {
+    float: left;
     margin: 0 8px;
-    display: inline-block;
+    height: 32px;
+    width: 32px;
     position: relative;
     top: 16px;
     left: 16px;
@@ -130,7 +132,7 @@ body {
 #g-btn {
     border-bottom-left-radius: 220px;
     left: -2000px;
-    celar: left;
+    clear: left;
 }
 
 #b-btn {

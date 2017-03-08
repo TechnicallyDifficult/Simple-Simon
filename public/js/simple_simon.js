@@ -151,7 +151,6 @@ function successSequence() {
         addButton();
     // on round 10, begin transition into breakout
     } else if (currentRound == 10) {
-        gameState = 'breakout';
         breakout();
     } else {
         // otherwise, play the normal success animation and proceed to the computer's turn
@@ -169,13 +168,14 @@ function successSequence() {
 }
 
 function breakout() {
+    gameState = 'breakout';
     var x = ($('#field').width() / 2),
         y = ($('#field').height() / 2),
         dx = 1,
         dy = 1,
         bricksInitialized = false,
         paddleX = ($('#field').width() / 2),
-        lives = 2,
+        lives = 3,
         ballMoveInterval,
         bricksBroken = 0,
         currentRound = 0;
@@ -296,14 +296,9 @@ function breakout() {
     function showPaddle() {
         // first, it shows the hidden lives and animates them into their full size
         $('.life').removeClass('hidden').addClass('rotating');
-        $('.life').animate({
-            'top': '0px',
-            'left': '0px',
-        }, 500);
-        $('.life-corner').animate({
-            'height': '16px',
-            'width': '16px'
-        }, 700);
+        $('.life').each(function (index, element) {
+            growBall(element, true);
+        });
         // the round counter has some properties set and then fades into existence
         $('#round-counter').css('color', 'white').text(currentRound).fadeIn(700, 'linear');
         // the paddle receives the same treatment as the lives
@@ -321,6 +316,9 @@ function breakout() {
     function roundProgress() {
         dx = 0;
         dy = 0;
+        setTimeout(function () {
+            shrinkBall(buttonContainer, false);
+        });
     }
 
     function checkBrickCollision() {
@@ -380,50 +378,70 @@ function breakout() {
         }
     }
 
-    // this function is used for the little animations when the player loses a life
-    function shrinkBall(ball) {
-        // since each ball is made up of a container div and 4 smaller divs, we have to animate each of them separately
+    function shrinkBall(ball, life, complete) {
+        console.log('shrinking ball: ' + ball);
+        // lives behave slightly differently than the ball for the purposes of this function
+        if (life) {
+            ball.animate({
+                'top': parseInt(ball.css('top')) - 16,
+                'left': parseInt(ball.css('left')) - 16 
+            }, 500);
+        }
         ball.children().animate({
             'height': '0px',
             'width': '0px'
-        }, 500)
-        ball.animate({
-            'height': '0px',
-            'width': '0px',
-            'top': parseInt(ball.attr('top')) + 16,
-            'left': parseInt(ball.attr('left')) + 16
         }, 500, function () {
             ball.addClass('hidden');
+            if (typeof complete == 'function') {
+                complete();
+            }
+        });
+    }
+
+    function growBall(ball, life, complete) {
+        $(ball).removeClass('hidden');
+        // lives behave slightly differently than the ball for the purposes of this function
+        if (life) {
+            $(ball).animate({
+                'top': '0px',
+                'left': '0px'
+            }, 500);
+        }
+        $(ball).children().animate({
+            'height': '16px',
+            'width': '16px'
+        }, 500, function () {
+            if (typeof complete == 'function') {
+                complete();
+            }
+        });
+    }
+
+    // this function is for putting the ball back in the center of the field
+    function resetBall() {
+        x = ($('#field').width() / 2);
+        y = ($('#field').height() / 2);
+        growBall(buttonContainer, false, function () {
+            setTimeout(function () {
+                gameState = 'breakout';
+                dx = 1;
+                dy = 1;
+            }, 500);
         });
     }
 
     function loseLife() {
+        gameState = 'losinglife';
         // first, the main ball shrinks out of existence
-        shrinkBall(buttonContainer);
+        shrinkBall(buttonContainer, false);
         setTimeout(function () {
             if (lives > 0) {
-                // after a delay, the rightmost life is shrunk out of sight
-                shrinkBall($('.life').eq(lives - 1));
-                setTimeout(function () {
-                    // after another delay, the ball is moved back into the center of the field...
-                    x = ($('#field').width() / 2);
-                    y = ($('#field').height() / 2);
-                    // and then is reshown
-                    buttonContainer.removeClass('hidden');
-                    buttonContainer.animate({
-                        'height': '32px',
-                        'width': '32px'
-                    }, 500);
-                    buttons.animate({
-                        'height': '16px',
-                        'width': '16px'
-                    }, 700, function () {
-                        setTimeout(function () {
-                            dx = 1;
-                            dy = 1;
-                        }, 1000);
-                    });
-                }, 800);
+                if (lives > 1) {
+                    // after a delay, the rightmost life is shrunk out of sight and then the ball is reset
+                    shrinkBall($('.life').eq(lives - 2), true, resetBall);
+                } else {
+                    resetBall();
+                }
                 lives--;
             } else {
                 // if the player is out of lives, that's it! Nothing else happens.
@@ -451,9 +469,11 @@ function breakout() {
         // this is what actually causes the ball to move
         ballMoveInterval = setInterval(function () {
             // on every interval, check for collisions
-            checkBrickCollision();
-            checkPaddleCollision();
-            checkEdgeCollision();
+            if (gameState == 'breakout') {
+                checkBrickCollision();
+                checkPaddleCollision();
+                checkEdgeCollision();
+            }
             x += dx;
             y += dy;
             buttonContainer.css({
