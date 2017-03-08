@@ -10,7 +10,7 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function simon() {
+// function simon() {
     var buttonsOn = false,
         buttonSequence = [],
         currentIndex = 0,
@@ -201,7 +201,7 @@ function simon() {
             }
         }
     });
-}
+// }
 
 function breakout() {
     gameState = 'breakout';
@@ -209,16 +209,19 @@ function breakout() {
         y = ($('#field').height() / 2),
         dx = 1,
         dy = 1,
-        bricksInitialized = false,
+        gameInitialized = false,
         paddleX = ($('#field').width() / 2),
-        lives = 3,
+        lives = 2,
         ballMoveInterval,
         bricksBroken = 0,
         currentRound = 0;
 
     function transitionToBreakout() {
         // first, the round counter fades out
-        $('#round-counter').fadeOut(1000, 'linear');
+        $('#round-counter').fadeOut({
+            'duration': 1000,
+            'easing': 'linear'
+        });
         // and the background fades to black
         $('body').addClass('fade-to-black');
         setTimeout(function () {
@@ -299,7 +302,7 @@ function breakout() {
             // first, a random color is given to each brick
             $(element).removeClass('red yellow green blue').addClass(chooseColor());
             // then, if it hasn't been done already, data attributes are added to each, using the setHitbox function to determine the value of each by passing in the brick's index and a string telling it which value to calculate
-            if (!bricksInitialized) {
+            if (!gameInitialized) {
                 $(element).attr({
                     'data-left': setHitbox(index, 'left'),
                     'data-top': setHitbox(index, 'top'),
@@ -319,28 +322,32 @@ function breakout() {
             } else {
                 // after all of them have appeared, clear the interval and move on to showing the paddle...
                 clearInterval(intervalId);
-                // ...unless this has already happened before
-                if (typeof complete == 'function') {
-                    complete();
-                } 
-                if (!bricksInitialized) {
-                    setTimeout(showPaddle, 300);
+                if (!gameInitialized) {
+                    setTimeout(showLives, 300);
                 }
-                bricksInitialized = true;
             }
         }, 100);
     }
 
-    // this function also shows the life and round counters
-    function showPaddle() {
-        // first, it shows the hidden lives and animates them into their full size
+    function showLives() {
+        // show the hidden lives and animate them into their full size
         $('.life').removeClass('hidden').addClass('rotating');
         $('.life').each(function (index, element) {
             growBall(element, true);
         });
+        if (!gameInitialized) {
+            showPaddle();
+        }
+    }
+
+    // this function also shows the round counter
+    function showPaddle() {
         // the round counter has some properties set and then fades into existence
-        $('#round-counter').css('color', 'white').text(currentRound).fadeIn(700, 'linear');
-        // the paddle receives the same treatment as the lives
+        $('#round-counter').css('color', 'white').text(currentRound).fadeIn({
+            'duration': 700,
+            'easing': 'linear'
+        });
+        // the paddle receives the same animation treatment as the lives
         $('#paddle').removeClass('hidden').animate({
             'height': '24px',
             'width': '128px',
@@ -348,6 +355,7 @@ function breakout() {
             'bottom': '0px',
         }, 700, function () {
             // after a delay, the main draw function is called, which starts the ball moving
+            gameInitialized = true;
             setTimeout(draw, 300);
         });
     }
@@ -358,12 +366,14 @@ function breakout() {
         gameState = 'breakoutRoundProgress';
         // freeze the ball's position
         setTimeout(function () {
-            shrinkBall(buttonContainer, false, function () {
-                initializeBricks(function () {
+            shrinkBall(buttonContainer, false);
+            setTimeout(function () {
+                initializeBricks()
+                setTimeout(function () {
                     $('#round-counter').text(currentRound);
                     resetBall();
-                });
-            });
+                }, 3000);
+            }, 500);
         });
     }
 
@@ -418,11 +428,12 @@ function breakout() {
         // if the ball is colliding with the bottom...
         if (y + dy > $('#field').height() - 32) {
             // freeze the ball's movement
+            gameState = 'losingLife';
             loseLife();
         }
     }
 
-    function shrinkBall(ball, life, complete) {
+    function shrinkBall(ball, life) {
         // lives behave slightly differently than the ball for the purposes of this function
         if (life) {
             ball.animate({
@@ -435,13 +446,10 @@ function breakout() {
             'width': '0px'
         }, 500, function () {
             ball.addClass('hidden');
-            if (typeof complete == 'function') {
-                complete();
-            }
         });
     }
 
-    function growBall(ball, life, complete) {
+    function growBall(ball, life) {
         $(ball).removeClass('hidden');
         // lives behave slightly differently than the ball for the purposes of this function
         if (life) {
@@ -453,44 +461,78 @@ function breakout() {
         $(ball).children().animate({
             'height': '16px',
             'width': '16px'
-        }, 500, function () {
-            if (typeof complete == 'function') {
-                complete();
-            }
-        });
+        }, 500);
     }
 
     // this function is for putting the ball back in the center of the field
     function resetBall() {
         x = ($('#field').width() / 2);
         y = ($('#field').height() / 2);
-        growBall(buttonContainer, false, function () {
-            setTimeout(function () {
-                gameState = 'breakout';
-                dx = 1;
-                dy = 1;
-            }, 500);
-        });
+        growBall(buttonContainer, false);
+        setTimeout(function () {
+            gameState = 'breakout';
+            dx = 1;
+            dy = 1;
+        }, 1000);
     }
 
     function loseLife() {
-        gameState = 'losinglife';
         // first, the main ball shrinks out of existence
         shrinkBall(buttonContainer, false);
+        console.log('shrinking ball...');
         setTimeout(function () {
             if (lives > 0) {
-                if (lives > 1) {
+                if (lives >= 1) {
                     // after a delay, the rightmost life is shrunk out of sight and then the ball is reset
-                    shrinkBall($('.life').eq(lives - 2), true, resetBall);
+                    shrinkBall($('.life').eq(lives - 1), true);
+                    setTimeout(resetBall, 500);
                 } else {
                     resetBall();
                 }
                 lives--;
             } else {
-                // if the player is out of lives, that's it! Nothing else happens.
-                clearInterval(ballMoveInterval);
+                // if the player is out of lives...
+                gameState = 'breakoutGameOver';
+                gameOver();
             }
         }, 500);
+    }
+
+    function gameOver() {
+        // first all the bricks fade out
+        $('.brick').animate({
+            'opacity': 0
+        }, 1000, function () {
+            // then some properties are set on them so that the game can be easily restarted
+            $('.brick').removeClass('active-brick').addClass('hidden-brick').css('opacity', '100');
+            setTimeout(function () {
+                // after a delay, the game over message appears
+                $('#gameover-message').removeClass('hidden');
+                $('#gameover-text').css('opacity', '100')
+                setTimeout(function () {
+                    // then after another delay, another message appears
+                    $('#startagain-text').css('opacity', '100');
+                    setTimeout(function () {
+                        // finally, after one more delay, the player is able to click to restart the game
+                        $(document).click(function () {
+                            $('#gameover-message').addClass('hidden');
+                            $('#gameover-text').css('opacity', '0');
+                            $('#startagain-text').css('opacity', '0');
+                            bricksBroken = 0;
+                            currentRound = 0;
+                            lives = 2;
+                            $('#round-counter').text(currentRound);
+                            initializeBricks()
+                            showLives();
+                            setTimeout(function () {
+                                resetBall();
+                            }, 3000);
+                            $(document).off('click');
+                        });
+                    }, 300);
+                }, 1000);
+            }, 1000);
+        });
     }
 
     function draw() {
@@ -524,10 +566,10 @@ function breakout() {
                 'top': y,
                 'left': x
             });
-        }, 5);
+        }, 10);
     }
 
     transitionToBreakout();
 }
 
-simon();
+// simon();
