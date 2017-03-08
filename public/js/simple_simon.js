@@ -261,7 +261,7 @@ function breakout() {
     function initializeBricks(complete) {
         $('.brick').each(function (index, element) {
             // first, a random color is given to each brick
-            $(element).addClass(chooseColor());
+            $(element).removeClass('red yellow green blue').addClass(chooseColor());
             // then, if it hasn't been done already, data attributes are added to each, using the setHitbox function to determine the value of each by passing in the brick's index and a string telling it which value to calculate
             if (!bricksInitialized) {
                 $(element).attr({
@@ -321,8 +321,6 @@ function breakout() {
         currentRound++;
         gameState = 'breakoutRoundProgress';
         // freeze the ball's position
-        dx = 0;
-        dy = 0;
         setTimeout(function () {
             shrinkBall(buttonContainer, false, function () {
                 initializeBricks(function () {
@@ -384,8 +382,6 @@ function breakout() {
         // if the ball is colliding with the bottom...
         if (y + dy > $('#field').height() - 32) {
             // freeze the ball's movement
-            dx = 0;
-            dy = 0;
             loseLife();
         }
     }
@@ -486,9 +482,9 @@ function breakout() {
                 checkBrickCollision();
                 checkPaddleCollision();
                 checkEdgeCollision();
+                x += dx;
+                y += dy;
             }
-            x += dx;
-            y += dy;
             buttonContainer.css({
                 'top': y,
                 'left': x
