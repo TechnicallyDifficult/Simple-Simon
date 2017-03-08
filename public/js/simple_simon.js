@@ -146,7 +146,7 @@ function simon() {
         gameState = 'computerTurn';
         currentIndex = 0;
         currentRound++;
-        $('#round-counter').text(currentRound - 1);
+        $('#round-counter').text(currentRound);
         // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
         if ((currentRound == 3 && buttonCount < 2) || (currentRound == 6 && buttonCount < 4)) {
             addButton();
@@ -167,6 +167,40 @@ function simon() {
             }, 50);
         }
     }
+
+    buttons.click(function () {
+        if (gameState == 'idle') {
+            // Is the button clicked lit up?
+            $(this).toggleClass('lit-btn');
+            // Are all buttons now lit up?
+            for (var i = 0; i < buttonCount; i++) {
+                // if at any point a button that is off is encountered...
+                if (!$(buttons[i]).hasClass('lit-btn')) {
+                    buttonsOn = false;
+                    break;
+                } else {
+                    buttonsOn = true;
+                }
+            }
+            if (buttonsOn) {
+                buttons.removeClass('enabled-btn lit-btn');
+                buttonsOn = false;
+                gameState = 'intro';
+                playIntro();
+            }
+        } else if (gameState == 'playerTurn') {
+            // if the ID of the button clicked matches the one in the current index of the array
+            if ($(this).attr('id') == buttonSequence[currentIndex].id) {
+                currentIndex++;
+                // if the player has finished clicking the buttons in the correct order...
+                if (currentIndex == buttonSequence.length) {
+                    successSequence();
+                }
+            } else {
+                failureSequence();
+            }
+        }
+    });
 }
 
 function breakout() {
@@ -497,37 +531,3 @@ function breakout() {
 }
 
 simon();
-
-buttons.click(function () {
-    if (gameState == 'idle') {
-        // Is the button clicked lit up?
-        $(this).toggleClass('lit-btn');
-        // Are all buttons now lit up?
-        for (var i = 0; i < buttonCount; i++) {
-            // if at any point a button that is off is encountered...
-            if (!$(buttons[i]).hasClass('lit-btn')) {
-                buttonsOn = false;
-                break;
-            } else {
-                buttonsOn = true;
-            }
-        }
-        if (buttonsOn) {
-            buttons.removeClass('enabled-btn lit-btn');
-            buttonsOn = false;
-            gameState = 'intro';
-            playIntro();
-        }
-    } else if (gameState == 'playerTurn') {
-        // if the ID of the button clicked matches the one in the current index of the array
-        if ($(this).attr('id') == buttonSequence[currentIndex].id) {
-            currentIndex++;
-            // if the player has finished clicking the buttons in the correct order...
-            if (currentIndex == buttonSequence.length) {
-                successSequence();
-            }
-        } else {
-            failureSequence();
-        }
-    }
-});
