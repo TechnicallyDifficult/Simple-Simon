@@ -318,6 +318,11 @@ function breakout() {
         });
     }
 
+    function roundProgress() {
+        dx = 0;
+        dy = 0;
+    }
+
     function checkBrickCollision() {
         $('.active-brick').each(function (index, element) {
             // if, on the next interval, the ball would be moved inside the brick being checked...
@@ -408,11 +413,11 @@ function breakout() {
                     buttonContainer.animate({
                         'height': '32px',
                         'width': '32px'
-                    }, 300);
+                    }, 500);
                     buttons.animate({
                         'height': '16px',
                         'width': '16px'
-                    }, 300, function () {
+                    }, 700, function () {
                         setTimeout(function () {
                             dx = 1;
                             dy = 1;
