@@ -1,14 +1,8 @@
 'use strict';
 
 var gameState = 'idle',
-    buttonSequence = [],
-    currentIndex = 0,
-    currentRound = 1,
     buttons = $('.game-btn'),
-    buttonContainer = $('#button-container'),
-    buttonCount = 1,
-    buttonsOn = false;
-
+    buttonContainer = $('#button-container');
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
@@ -16,154 +10,162 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function chooseButton() {
-    // first generate a random number between 0 and the number of buttons on the page
-    var buttonIndex = getRandomInt(0, buttonCount);
-    // then find and return the button whose index matches the generated number
-    return buttons[buttonIndex];
-}
+function simon() {
+    var buttonsOn = false,
+        buttonSequence = [],
+        currentIndex = 0,
+        currentRound = 0,
+        buttonCount = 1;
 
-function playIntro() {
-    // a counter for determining when to stop the intro animation
-    var count = 0;
-    var chosenButton;
-    // the intro should cause the buttons to rapidly blink in a randomized order
-    var intervalId = setInterval(function () {
-        if (count < 40) {
-            // on each interval, if a button isn't lit, choose one and light it. Otherwise, turn off the previously lit button
-            if (!chosenButton) {
-                chosenButton = chooseButton();
-                $(chosenButton).addClass('lit-btn');
-            } else {
-                $(chosenButton).removeClass('lit-btn');
-                chosenButton = '';
-            }
-            count++;
-        } else {
-            // end the intro and proceed to the next phase of the game
-            clearInterval(intervalId);
-            gameState = 'computerTurn';
-            setTimeout(computerTurn, 500);
-        }
-    }, 50);
-}
-
-function computerTurn() {
-    buttonSequence.push(chooseButton());
-    playSequence(buttonSequence.length, 0);
-}
-
-function playSequence(runCount, i) {
-    if (i < runCount) {
-        // first, light up the button at the current index
-        $(buttonSequence[i]).addClass('lit-btn');
-        // after a delay, darken it again
-        setTimeout(function () {
-            $(buttonSequence[i]).removeClass('lit-btn');
-            i++;
-            // after another delay, run through all this again
-            setTimeout(function () {
-                playSequence(runCount, i);
-            }, 500);
-        }, 500);
-    // once finished playing the entire sequence...
-    } else {
-        gameState = 'playerTurn'
-        buttons.addClass('enabled-btn');
+    function chooseButton() {
+        // first generate a random number between 0 and the number of buttons on the page
+        var buttonIndex = getRandomInt(0, buttonCount);
+        // then find and return the button whose index matches the generated number
+        return buttons[buttonIndex];
     }
-}
 
-function addButton() {
-    switch (buttonCount) {
-        case 1:
-            $('#r-btn').animate({
-                // first, the red button morphs into a rectangle with about half its initial width
-                'border-radius': '0%',
-                'width': '220px'
-            }, 700).animate({
-                // then it morphs into a semicircle
-                'border-top-left-radius': '444px',
-                'border-bottom-left-radius': '444px'
-            }, 700, function () {
-                // finally, the yellow button is unhidden and slides into play
-                $('#y-btn').removeClass('hidden').animate({
-                    'top': '0'
-                }, 500, function () {
-                    // when the animation finishes, after a brief delay, start the computer's turn again
-                    setTimeout(computerTurn, 300);
-                });
-            });
-            buttonCount = 2;
-            break;
-        case 2:
-            $('#r-btn').animate({
-                // first, the red button morphs into a quarter-circle
-                'border-bottom-left-radius': '0',
-                'height': '220px'
-            }, 700);
-            $('#y-btn').animate({
-                // at the same time as the red one, the yellow button does the same
-                'border-bottom-right-radius': '0',
-                'height': '220px'
-            }, 700, function () {
-                $('#g-btn').removeClass('hidden').animate({
-                    // when the yellow button's animation finishes (both buttons should finish at the same time), the green button is unhidden and slides into play
-                    'left': '0'
-                }, 700);
-                $('#b-btn').removeClass('hidden').animate({
-                    // at the same time as the green one, the blue button does the same from the other side
-                    'right': '0'
-                }, 700, function () {
-                    // when the animation finishes, after a brief delay, start the computer's turn again
-                    setTimeout(computerTurn, 500);
-                });
-            });
-            buttonCount = 4;
-            break;
-    }
-    buttons = $('.game-btn');
-}
-
-function failureSequence() {
-    // this function causes all buttons to light up for a brief moment
-    gameState = 'failure';
-    buttons.toggleClass('enabled-btn lit-btn');
-    setTimeout(function () {
-        // and then everything is reset except the number of buttons in play
-        buttonSequence = [];
-        currentIndex = 0;
-        currentRound = 1;
-        $('#round-counter').text(currentRound - 1);
-        gameState = 'idle';
-        buttons.toggleClass('enabled-btn lit-btn');
-    }, 1500);
-}
-
-function successSequence() {
-    // just like with the intro, a counter for determining when to stop the success animation
-    buttons.removeClass('enabled-btn');
-    gameState = 'computerTurn';
-    currentIndex = 0;
-    currentRound++;
-    $('#round-counter').text(currentRound - 1);
-    // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
-    if ((currentRound == 3 && buttonCount < 2) || (currentRound == 6 && buttonCount < 4)) {
-        addButton();
-    // on round 10, begin transition into breakout
-    } else if (currentRound == 10) {
-        breakout();
-    } else {
-        // otherwise, play the normal success animation and proceed to the computer's turn
+    function playIntro() {
+        // a counter for determining when to stop the intro animation
         var count = 0;
+        var chosenButton;
+        // the intro should cause the buttons to rapidly blink in a randomized order
         var intervalId = setInterval(function () {
-            if (count < 20) {
-                buttons.toggleClass('lit-btn');
+            if (count < 40) {
+                // on each interval, if a button isn't lit, choose one and light it. Otherwise, turn off the previously lit button
+                if (!chosenButton) {
+                    chosenButton = chooseButton();
+                    $(chosenButton).addClass('lit-btn');
+                } else {
+                    $(chosenButton).removeClass('lit-btn');
+                    chosenButton = '';
+                }
                 count++;
             } else {
+                // end the intro and proceed to the next phase of the game
                 clearInterval(intervalId);
-                setTimeout(computerTurn, 400);
+                gameState = 'computerTurn';
+                setTimeout(computerTurn, 500);
             }
         }, 50);
+    }
+
+    function computerTurn() {
+        buttonSequence.push(chooseButton());
+        playSequence(buttonSequence.length, 0);
+    }
+
+    function playSequence(runCount, i) {
+        if (i < runCount) {
+            // first, light up the button at the current index
+            $(buttonSequence[i]).addClass('lit-btn');
+            // after a delay, darken it again
+            setTimeout(function () {
+                $(buttonSequence[i]).removeClass('lit-btn');
+                i++;
+                // after another delay, run through all this again
+                setTimeout(function () {
+                    playSequence(runCount, i);
+                }, 500);
+            }, 500);
+        // once finished playing the entire sequence...
+        } else {
+            gameState = 'playerTurn'
+            buttons.addClass('enabled-btn');
+        }
+    }
+
+    function addButton() {
+        switch (buttonCount) {
+            case 1:
+                $('#r-btn').animate({
+                    // first, the red button morphs into a rectangle with about half its initial width
+                    'border-radius': '0%',
+                    'width': '220px'
+                }, 700).animate({
+                    // then it morphs into a semicircle
+                    'border-top-left-radius': '444px',
+                    'border-bottom-left-radius': '444px'
+                }, 700, function () {
+                    // finally, the yellow button is unhidden and slides into play
+                    $('#y-btn').removeClass('hidden').animate({
+                        'top': '0'
+                    }, 500, function () {
+                        // when the animation finishes, after a brief delay, start the computer's turn again
+                        setTimeout(computerTurn, 300);
+                    });
+                });
+                buttonCount = 2;
+                break;
+            case 2:
+                $('#r-btn').animate({
+                    // first, the red button morphs into a quarter-circle
+                    'border-bottom-left-radius': '0',
+                    'height': '220px'
+                }, 700);
+                $('#y-btn').animate({
+                    // at the same time as the red one, the yellow button does the same
+                    'border-bottom-right-radius': '0',
+                    'height': '220px'
+                }, 700, function () {
+                    $('#g-btn').removeClass('hidden').animate({
+                        // when the yellow button's animation finishes (both buttons should finish at the same time), the green button is unhidden and slides into play
+                        'left': '0'
+                    }, 700);
+                    $('#b-btn').removeClass('hidden').animate({
+                        // at the same time as the green one, the blue button does the same from the other side
+                        'right': '0'
+                    }, 700, function () {
+                        // when the animation finishes, after a brief delay, start the computer's turn again
+                        setTimeout(computerTurn, 500);
+                    });
+                });
+                buttonCount = 4;
+                break;
+        }
+        buttons = $('.game-btn');
+    }
+
+    function failureSequence() {
+        // this function causes all buttons to light up for a brief moment
+        gameState = 'failure';
+        buttons.toggleClass('enabled-btn lit-btn');
+        setTimeout(function () {
+            // and then everything is reset except the number of buttons in play
+            buttonSequence = [];
+            currentIndex = 0;
+            currentRound = 1;
+            $('#round-counter').text(currentRound - 1);
+            gameState = 'idle';
+            buttons.toggleClass('enabled-btn lit-btn');
+        }, 1500);
+    }
+
+    function successSequence() {
+        // just like with the intro, a counter for determining when to stop the success animation
+        buttons.removeClass('enabled-btn');
+        gameState = 'computerTurn';
+        currentIndex = 0;
+        currentRound++;
+        $('#round-counter').text(currentRound - 1);
+        // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
+        if ((currentRound == 3 && buttonCount < 2) || (currentRound == 6 && buttonCount < 4)) {
+            addButton();
+        // on round 10, begin transition into breakout
+        } else if (currentRound == 10) {
+            breakout();
+        } else {
+            // otherwise, play the normal success animation and proceed to the computer's turn
+            var count = 0;
+            var intervalId = setInterval(function () {
+                if (count < 20) {
+                    buttons.toggleClass('lit-btn');
+                    count++;
+                } else {
+                    clearInterval(intervalId);
+                    setTimeout(computerTurn, 400);
+                }
+            }, 50);
+        }
     }
 }
 
@@ -387,12 +389,11 @@ function breakout() {
     }
 
     function shrinkBall(ball, life, complete) {
-        console.log('shrinking ball: ' + ball);
         // lives behave slightly differently than the ball for the purposes of this function
         if (life) {
             ball.animate({
                 'top': parseInt(ball.css('top')) - 16,
-                'left': parseInt(ball.css('left')) - 16 
+                'left': parseInt(ball.css('left')) - 16
             }, 500);
         }
         ball.children().animate({
@@ -494,6 +495,8 @@ function breakout() {
 
     transitionToBreakout();
 }
+
+simon();
 
 buttons.click(function () {
     if (gameState == 'idle') {
