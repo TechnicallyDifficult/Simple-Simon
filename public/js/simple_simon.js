@@ -366,14 +366,13 @@ function breakout() {
         gameState = 'breakoutRoundProgress';
         // freeze the ball's position
         setTimeout(function () {
-            shrinkBall(buttonContainer, false);
-            setTimeout(function () {
+            shrinkBall(buttonContainer, false, function () {
                 initializeBricks()
                 setTimeout(function () {
                     $('#round-counter').text(currentRound);
                     resetBall();
                 }, 3000);
-            }, 500);
+            });
         });
     }
 
@@ -433,8 +432,9 @@ function breakout() {
         }
     }
 
-    function shrinkBall(ball, life) {
+    function shrinkBall(ball, life, complete) {
         // lives behave slightly differently than the ball for the purposes of this function
+        console.log('shrinking ball...');
         if (life) {
             ball.animate({
                 'top': parseInt(ball.css('top')) - 16,
@@ -444,12 +444,15 @@ function breakout() {
         ball.children().animate({
             'height': '0px',
             'width': '0px'
-        }, 500, function () {
+        }, 500).promise().done(function () {
             ball.addClass('hidden');
+            if (typeof complete == 'function') {
+                complete();
+            }
         });
     }
 
-    function growBall(ball, life) {
+    function growBall(ball, life, complete) {
         $(ball).removeClass('hidden');
         // lives behave slightly differently than the ball for the purposes of this function
         if (life) {
@@ -461,31 +464,33 @@ function breakout() {
         $(ball).children().animate({
             'height': '16px',
             'width': '16px'
-        }, 500);
+        }, 500).promise().done(function () {
+            if (typeof complete == 'function') {
+                complete();
+            }
+        });
     }
 
     // this function is for putting the ball back in the center of the field
     function resetBall() {
         x = ($('#field').width() / 2);
         y = ($('#field').height() / 2);
-        growBall(buttonContainer, false);
-        setTimeout(function () {
-            gameState = 'breakout';
-            dx = 1;
-            dy = 1;
-        }, 1000);
+        growBall(buttonContainer, false, function () {
+            setTimeout(function () {
+                gameState = 'breakout';
+                dx = 1;
+                dy = 1;
+            }, 500);
+        });
     }
 
     function loseLife() {
         // first, the main ball shrinks out of existence
-        shrinkBall(buttonContainer, false);
-        console.log('shrinking ball...');
-        setTimeout(function () {
+        shrinkBall(buttonContainer, false, function () {
             if (lives > 0) {
                 if (lives >= 1) {
                     // after a delay, the rightmost life is shrunk out of sight and then the ball is reset
-                    shrinkBall($('.life').eq(lives - 1), true);
-                    setTimeout(resetBall, 500);
+                    shrinkBall($('.life').eq(lives - 1), true, resetBall);
                 } else {
                     resetBall();
                 }
@@ -495,14 +500,14 @@ function breakout() {
                 gameState = 'breakoutGameOver';
                 gameOver();
             }
-        }, 500);
+        });
     }
 
     function gameOver() {
         // first all the bricks fade out
         $('.brick').animate({
             'opacity': 0
-        }, 1000, function () {
+        }, 1000).promise().done(function () {
             // then some properties are set on them so that the game can be easily restarted
             $('.brick').removeClass('active-brick').addClass('hidden-brick').css('opacity', '100');
             setTimeout(function () {
@@ -522,7 +527,7 @@ function breakout() {
                             currentRound = 0;
                             lives = 2;
                             $('#round-counter').text(currentRound);
-                            initializeBricks()
+                            initializeBricks();
                             showLives();
                             setTimeout(function () {
                                 resetBall();
@@ -566,7 +571,7 @@ function breakout() {
                 'top': y,
                 'left': x
             });
-        }, 10);
+        }, 5);
     }
 
     transitionToBreakout();
