@@ -10,7 +10,7 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-// function simon() {
+function simon() {
     var buttonsOn = false,
         buttonSequence = [],
         currentIndex = 0,
@@ -201,7 +201,7 @@ function getRandomInt(min, max) {
             }
         }
     });
-// }
+}
 
 function breakout() {
     gameState = 'breakout';
@@ -367,6 +367,7 @@ function breakout() {
         // freeze the ball's position
         setTimeout(function () {
             shrinkBall(buttonContainer, false, function () {
+                // new bricks appear
                 initializeBricks()
                 setTimeout(function () {
                     $('#round-counter').text(currentRound);
@@ -465,6 +466,7 @@ function breakout() {
             'height': '16px',
             'width': '16px'
         }, 500).promise().done(function () {
+            // a function to call after the animation is complete
             if (typeof complete == 'function') {
                 complete();
             }
@@ -577,4 +579,4 @@ function breakout() {
     transitionToBreakout();
 }
 
-// simon();
+simon();
