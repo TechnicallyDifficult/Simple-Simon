@@ -10,7 +10,7 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function simon() {
+// function simon() {
     var buttonsOn = false,
         buttonSequence = [],
         currentIndex = 0,
@@ -201,7 +201,7 @@ function simon() {
             }
         }
     });
-}
+// }
 
 function breakout() {
     gameState = 'breakout';
@@ -272,26 +272,26 @@ function breakout() {
                 position = parseInt(indexString.substring(indexString.length - 1));
                 return position * 100;
             case 'top':
-                // if the index is only one digit long, the brick is obviously on the top row and therefore has a top value of 20 since there are 20 pixels of space above the entire field of bricks
+                // if the index is only one digit long, the brick is obviously on the top row and therefore has a top value of 48 since there are 48 pixels of space above the entire field of bricks
                 if (indexString.length == 1) {
-                    return 20;
+                    return 48;
                 } else {
-                    // otherwise, the value of the top side of the brick is equal to the value of the first digit of its index times the height of each brick (32), then plus 20 pixels to account for the empty space above all the bricks
+                    // otherwise, the value of the top side of the brick is equal to the value of the first digit of its index times the height of each brick (32), then plus 48 pixels to account for the empty space above all the bricks
                     position = parseInt(indexString.substring(0, 1));
-                    return (position * 32) + 20;
+                    return (position * 32) + 48;
                 }
             case 'right':
                 // finding the value of the right side of each brick is done exactly the same way as finding the left side's value, except with 1 extra added to the value that will be multiplied by 100, as the right side of each brick is exactly 100 pixels away from the left side
                 position = parseInt(indexString.substring(indexString.length - 1));
                 return (position + 1) * 100;
             case 'bottom':
-                // finding the bottom value of a brick is easy if its index is a single-digit number (and therefore is on the top row), as all of them will have a value of 52 (the height of the empty space + the height of each brick)
+                // finding the bottom value of a brick is easy if its index is a single-digit number (and therefore is on the top row), as all of them will have a value of 80 (the height of the empty space + the height of each brick)
                 if (indexString.length == 1) {
-                    return 52;
+                    return 80;
                 } else {
                     // finding the bottom value of all other bricks is a little more difficult, but is no different than finding the top value of them except for an extra 32 pixels (and thus, we add 1 to position)
                     position = parseInt(indexString.substring(0, 1));
-                    return ((position + 1) * 32) + 20;
+                    return ((position + 1) * 32) + 48;
                 }
         }
     }
@@ -579,4 +579,4 @@ function breakout() {
     transitionToBreakout();
 }
 
-simon();
+// simon();
