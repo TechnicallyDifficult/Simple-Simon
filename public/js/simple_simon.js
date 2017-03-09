@@ -1,6 +1,6 @@
 'use strict';
 
-var gameState = 'idle',
+var gameState = 'simonIdle',
     buttons = $('.game-btn'),
     buttonContainer = $('#button-container');
 
@@ -10,12 +10,14 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-// function simon() {
+function simon() {
     var buttonsOn = false,
         buttonSequence = [],
         currentIndex = 0,
         currentRound = 0,
-        buttonCount = 1;
+        buttonCount = 1,
+        keylog = [],
+        konami = 'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight b a';
 
     function chooseButton() {
         // first generate a random number between 0 and the number of buttons on the page
@@ -25,6 +27,7 @@ function getRandomInt(min, max) {
     }
 
     function playIntro() {
+        keylog = [];
         // a counter for determining when to stop the intro animation
         var count = 0;
         var chosenButton;
@@ -43,7 +46,7 @@ function getRandomInt(min, max) {
             } else {
                 // end the intro and proceed to the next phase of the game
                 clearInterval(intervalId);
-                gameState = 'computerTurn';
+                gameState = 'simonComputerTurn';
                 setTimeout(computerTurn, 500);
             }
         }, 50);
@@ -69,12 +72,12 @@ function getRandomInt(min, max) {
             }, 500);
         // once finished playing the entire sequence...
         } else {
-            gameState = 'playerTurn'
+            gameState = 'simonPlayerTurn'
             buttons.addClass('enabled-btn');
         }
     }
 
-    function addButton() {
+    function addButton(complete) {
         switch (buttonCount) {
             case 1:
                 $('#r-btn').animate({
@@ -90,8 +93,8 @@ function getRandomInt(min, max) {
                     $('#y-btn').removeClass('hidden').animate({
                         'top': '0'
                     }, 500, function () {
-                        // when the animation finishes, after a brief delay, start the computer's turn again
-                        setTimeout(computerTurn, 300);
+                        // perform this task when the animation finishes after a brief delay
+                        setTimeout(complete, 300);
                     });
                 });
                 buttonCount = 2;
@@ -115,8 +118,8 @@ function getRandomInt(min, max) {
                         // at the same time as the green one, the blue button does the same from the other side
                         'right': '0'
                     }, 700, function () {
-                        // when the animation finishes, after a brief delay, start the computer's turn again
-                        setTimeout(computerTurn, 500);
+                        // perform this task when the animation completes
+                        complete();
                     });
                 });
                 buttonCount = 4;
@@ -127,7 +130,7 @@ function getRandomInt(min, max) {
 
     function failureSequence() {
         // this function causes all buttons to light up for a brief moment
-        gameState = 'failure';
+        gameState = 'simonFailureSequence';
         buttons.toggleClass('enabled-btn lit-btn');
         setTimeout(function () {
             // and then everything is reset except the number of buttons in play
@@ -135,7 +138,7 @@ function getRandomInt(min, max) {
             currentIndex = 0;
             currentRound = 1;
             $('#round-counter').text(currentRound - 1);
-            gameState = 'idle';
+            gameState = 'simonIdle';
             buttons.toggleClass('enabled-btn lit-btn');
         }, 1500);
     }
@@ -143,13 +146,13 @@ function getRandomInt(min, max) {
     function successSequence() {
         // just like with the intro, a counter for determining when to stop the success animation
         buttons.removeClass('enabled-btn');
-        gameState = 'computerTurn';
+        gameState = 'simonComputerTurn';
         currentIndex = 0;
         currentRound++;
         $('#round-counter').text(currentRound);
         // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
         if ((currentRound == 3 && buttonCount < 2) || (currentRound == 6 && buttonCount < 4)) {
-            addButton();
+            addButton(computerTurn);
         // on round 10, begin transition into breakout
         } else if (currentRound == 10) {
             breakout();
@@ -169,7 +172,7 @@ function getRandomInt(min, max) {
     }
 
     buttons.click(function () {
-        if (gameState == 'idle') {
+        if (gameState == 'simonIdle') {
             // Is the button clicked lit up?
             $(this).toggleClass('lit-btn');
             // Are all buttons now lit up?
@@ -185,10 +188,10 @@ function getRandomInt(min, max) {
             if (buttonsOn) {
                 buttons.removeClass('enabled-btn lit-btn');
                 buttonsOn = false;
-                gameState = 'intro';
+                gameState = 'simonIntro';
                 playIntro();
             }
-        } else if (gameState == 'playerTurn') {
+        } else if (gameState == 'simonPlayerTurn') {
             // if the ID of the button clicked matches the one in the current index of the array
             if ($(this).attr('id') == buttonSequence[currentIndex].id) {
                 currentIndex++;
@@ -201,7 +204,37 @@ function getRandomInt(min, max) {
             }
         }
     });
-// }
+
+    // this allows the user to enter the konami code when simon is in idle mode to skip directly to breakout. If not all the buttons have been added yet, it does so.
+    $(document).keyup(function(event) {
+        if (gameState == 'simonIdle') {
+            // if the keylog is full, just get rid of the first value in the array
+            if (keylog.length == 10) {
+                keylog.shift();
+            }
+            keylog.push(event.key);
+            if (keylog.join(' ') == konami) {
+                // make sure the buttons are disabled and unlit so that breakout works exactly as intended
+                buttons.removeClass('enabled-btn lit-btn');
+                gameState = 'breakoutTransition';
+                // if the player entered the sequence while only one button is onscreen...
+                if (buttonCount < 4) {
+                    addButton(function () {
+                        // if the player entered the sequence with only two buttons onscreen...
+                        if (buttonCount < 4) {
+                            addButton(breakout);
+                        } else {
+                            breakout();
+                        }
+                    });
+                // if the player entered the sequence when all four buttons are onscreen...
+                } else {
+                    setTimeout(breakout, 300);
+                }
+            }
+        }
+    });
+}
 
 function breakout() {
     gameState = 'breakout';
@@ -428,7 +461,7 @@ function breakout() {
         // if the ball is colliding with the bottom...
         if (y + dy > $('#field').height() - 32) {
             // freeze the ball's movement
-            gameState = 'losingLife';
+            gameState = 'breakoutLosingLife';
             loseLife();
         }
     }
@@ -579,4 +612,4 @@ function breakout() {
     transitionToBreakout();
 }
 
-// simon();
+simon();
