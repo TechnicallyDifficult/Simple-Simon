@@ -208,7 +208,7 @@ $(document).ready(function () {
 
         // this allows the user to enter the konami code when simon is in idle mode to skip directly to breakout. If not all the buttons have been added yet, it does so.
         $(document).keyup(function(event) {
-            if (gameState == 'simonIdle') {
+            if (gameState == 'simonIdle' || gameState == 'simonPlayerTurn') {
                 // if the keylog is full, just get rid of the first value in the array
                 if (keylog.length == 10) {
                     keylog.shift();
