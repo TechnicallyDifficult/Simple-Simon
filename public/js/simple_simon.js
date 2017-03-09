@@ -218,17 +218,17 @@ $(document).ready(function () {
                     // make sure the buttons are disabled and unlit so that breakout works exactly as intended
                     buttons.removeClass('enabled-btn lit-btn');
                     gameState = 'breakoutTransition';
-                    // if the player entered the sequence while only one button is onscreen...
+                    // I would just use a loop here, but if I do, it won't wait until the animation finishes before continuing on with the execution
                     if (buttonCount < 4) {
                         addButton(function () {
-                            // if the player entered the sequence with only two buttons onscreen...
+                            // if the player initially entered the sequence with only one button onscreen (and thus, there's only two now)...
                             if (buttonCount < 4) {
                                 addButton(breakout);
                             } else {
                                 breakout();
                             }
                         });
-                    // if the player entered the sequence when all four buttons are onscreen...
+                    // if the player entered the sequence with all four buttons onscreen...
                     } else {
                         breakout();
                     }
