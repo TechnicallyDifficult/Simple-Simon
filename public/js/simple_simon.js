@@ -306,8 +306,8 @@ $(document).ready(function () {
                     position = parseInt(indexString.substring(indexString.length - 1));
                     return position * 100;
                 case 'top':
-                    // if the index is only one digit long, the brick is obviously on the top row and therefore has a top value of 48 since there are 48 pixels of space above the entire field of bricks
-                    if (indexString.length == 1) {
+                    // if the index is less than 10, the brick is obviously on the top row and therefore has a top value of 48 since there are 48 pixels of space above the entire field of bricks
+                    if (index < 10) {
                         return 48;
                     } else {
                         // otherwise, the value of the top side of the brick is equal to the value of the first digit of its index times the height of each brick (32), then plus 48 pixels to account for the empty space above all the bricks
@@ -319,8 +319,8 @@ $(document).ready(function () {
                     position = parseInt(indexString.substring(indexString.length - 1));
                     return (position + 1) * 100;
                 case 'bottom':
-                    // finding the bottom value of a brick is easy if its index is a single-digit number (and therefore is on the top row), as all of them will have a value of 80 (the height of the empty space + the height of each brick)
-                    if (indexString.length == 1) {
+                    // finding the bottom value of a brick is easy if its index is less than 10 (and therefore is on the top row), as all of them will have a value of 80 (the height of the empty space + the height of each brick)
+                    if (index < 10) {
                         return 80;
                     } else {
                         // finding the bottom value of all other bricks is a little more difficult, but is no different than finding the top value of them except for an extra 32 pixels (and thus, we add 1 to position)
