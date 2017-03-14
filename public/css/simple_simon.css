@@ -122,6 +122,7 @@ body {
     -moz-animation: fadeToBlack 1s linear 1;
     -o-animation: fadeToBlack 1s linear 1;
     animation: fadeToBlack 1s linear 1;
+    animation-fill-mode: forwards;
 }
 
 #r-btn {

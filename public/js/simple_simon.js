@@ -30,12 +30,12 @@ $(document).ready(function () {
         function playIntro() {
             keylog = [];
             // a counter for determining when to stop the intro animation
-            var count = 0;
-            var chosenButton;
-            // the intro should cause the buttons to rapidly blink in a randomized order
-            var intervalId = setInterval(function () {
+            var count = 0,
+                chosenButton = '';
+            // the intro should cause the buttons to rapidly blink in a randomized order, using a timed recursive function
+            (function foo() {
                 if (count < 40) {
-                    // on each interval, if a button isn't lit, choose one and light it. Otherwise, turn off the previously lit button
+                    // on each run, no button has been chosen (and therefore, none are lit), choose one and light it. Otherwise, turn off the previously lit button
                     if (!chosenButton) {
                         chosenButton = chooseButton();
                         $(chosenButton).addClass('lit-btn');
@@ -44,41 +44,43 @@ $(document).ready(function () {
                         chosenButton = '';
                     }
                     count++;
+                    setTimeout(foo, 50);
                 } else {
                     // end the intro and proceed to the next phase of the game
-                    clearInterval(intervalId);
                     gameState = 'simonComputerTurn';
                     setTimeout(computerTurn, 500);
                 }
-            }, 50);
+            })();
         }
 
         function computerTurn() {
             buttonSequence.push(chooseButton());
-            playSequence(buttonSequence.length, 0);
+            playSequence(buttonSequence.length);
         }
 
-        function playSequence(runCount, i) {
-            if (i < runCount) {
-                // first, light up the button at the current index
-                $(buttonSequence[i]).addClass('lit-btn');
-                // after a delay, darken it again
-                setTimeout(function () {
-                    $(buttonSequence[i]).removeClass('lit-btn');
-                    i++;
-                    // after another delay, run through all this again
-                    setTimeout(function () {
-                        playSequence(runCount, i);
-                    }, 500);
-                }, 500);
-            // once finished playing the entire sequence...
-            } else {
-                gameState = 'simonPlayerTurn'
-                buttons.addClass('enabled-btn');
-            }
+        function playSequence(runCount) {
+            var i = 0;
+            // this timed recursive function is used in place of setInterval
+            (function foo() {
+                // on each run, either light up the button at the current index
+                if (i < runCount) {
+                    if (!$(buttonSequence[i]).hasClass('lit-btn')) {
+                        $(buttonSequence[i]).addClass('lit-btn');
+                    // or unlight it if it's already lit; only increment the counter when unlighting
+                    } else {
+                        $(buttonSequence[i]).removeClass('lit-btn');
+                        i++;
+                    }
+                    setTimeout(foo, 500);
+                // when the sequence is finished, proceed to the player's turn
+                } else {
+                    gameState = 'simonPlayerTurn';
+                    buttons.addClass('enabled-btn');
+                }
+            })();
         }
 
-        function addButton(complete) {
+        function addButton(complete, delay) {
             switch (buttonCount) {
                 case 1:
                     $('#r-btn').animate({
@@ -95,7 +97,7 @@ $(document).ready(function () {
                             'top': '0'
                         }, 500, function () {
                             // perform this task when the animation finishes after a brief delay
-                            setTimeout(complete, 500);
+                            setTimeout(complete, delay);
                         });
                     });
                     buttonCount = 2;
@@ -120,7 +122,7 @@ $(document).ready(function () {
                             'right': '0'
                         }, 700, function () {
                             // perform this task when the animation completes after a brief delay
-                            setTimeout(complete, 300);
+                            setTimeout(complete, delay);
                         });
                     });
                     buttonCount = 4;
@@ -153,22 +155,22 @@ $(document).ready(function () {
             $('#round-counter').text(currentRound);
             // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
             if ((currentRound == 2 && buttonCount < 2) || (currentRound == 5 && buttonCount < 4)) {
-                addButton(computerTurn);
+                addButton(computerTurn, 500);
             // on round 10, begin transition into breakout
             } else if (currentRound == 10) {
                 breakout();
             } else {
                 // otherwise, play the normal success animation and proceed to the computer's turn
                 var count = 0;
-                var intervalId = setInterval(function () {
+                (function foo() {
                     if (count < 20) {
                         buttons.toggleClass('lit-btn');
                         count++;
+                        setTimeout(foo, 50);
                     } else {
-                        clearInterval(intervalId);
                         setTimeout(computerTurn, 400);
                     }
-                }, 50);
+                })();
             }
         }
 
@@ -223,11 +225,11 @@ $(document).ready(function () {
                         addButton(function () {
                             // if the player initially entered the sequence with only one button onscreen (and thus, there's only two now)...
                             if (buttonCount < 4) {
-                                addButton(breakout);
+                                addButton(breakout, 300);
                             } else {
                                 breakout();
                             }
-                        });
+                        }, 300);
                     // if the player entered the sequence with all four buttons onscreen...
                     } else {
                         breakout();
@@ -257,12 +259,9 @@ $(document).ready(function () {
                 'easing': 'linear'
             });
             // and the background fades to black
-            $('body').addClass('fade-to-black');
-            setTimeout(function () {
-                // and stays that way
-                $('body').css('background-color', 'black');
+            $('body').addClass('fade-to-black').one('webkitAnimationEnd oanimationend oAnimationEnd msAnimationEnd animationend', function(event) {
+                // when that finishes, after a brief delay, the buttons all shrink
                 setTimeout(function () {
-                    // after a brief delay, the buttons all shrink
                     buttons.animate({
                         'height': '16px',
                         'width': '16px',
@@ -279,7 +278,7 @@ $(document).ready(function () {
                         setTimeout(initializeBricks, 500);
                     });
                 }, 300);
-            }, 999);
+            });;
         }
 
         function chooseColor() {
@@ -346,21 +345,21 @@ $(document).ready(function () {
                 }
             });
             $('#bricks-container').removeClass('hidden');
-            // a variable for determining when to stop the setInterval
+            // a variable for determining when to stop the recursive function
             var i = 0;
-            // here, a setInterval function is used to show the bricks one by one in a rapid succession (but not all at once) for increased visual appeal
-            var intervalId = setInterval(function () {
+            // here, a timed recursive function is used to show the bricks one by one in a rapid succession (but not all at once) for increased visual appeal
+            (function foo() {
                 if (i < 30) {
                     $('.brick').eq(i).removeClass('hidden hidden-brick').addClass('active-brick');
                     i++;
+                    setTimeout(foo, 100);
                 } else {
-                    // after all of them have appeared, clear the interval and move on to showing the paddle...
-                    clearInterval(intervalId);
+                    // after all of them have appeared, stop the recursion and move on to showing the lives (if they're not already shown)...
                     if (!gameInitialized) {
                         setTimeout(showLives, 300);
                     }
                 }
-            }, 100);
+            })();
         }
 
         function showLives() {
@@ -577,7 +576,7 @@ $(document).ready(function () {
 
         function draw() {
             gameState = 'breakout';
-            // this event listener is included in this function so that the paddle does not start moving until this function is called
+            // this event listener is placed here so that the paddle does not start moving until this function is called
             // it is what allows the mouse to control the paddle
             $(document).mousemove(function(event) {
                 // if the mouse cursor moves too far to the left, stop the paddle at the edge of the "field" until the mouse cursor is centered vertically with it again
@@ -592,9 +591,9 @@ $(document).ready(function () {
                 }
                 $('#paddle').css('left', paddleX);
             });
-            // this is what actually causes the ball to move
-            ballMoveInterval = setInterval(function () {
-                // on every interval, check for collisions and add to the ball's position value
+            // this is what actually causes the ball to move, another timed recursive function
+            (function foo() {
+                // on every run, check for collisions and add to the ball's position value
                 if (gameState == 'breakout') {
                     checkBrickCollision();
                     checkPaddleCollision();
@@ -602,12 +601,13 @@ $(document).ready(function () {
                     x += dx;
                     y += dy;
                 }
-                // on every interval, update the ball's position
+                // on every run, update the ball's position
                 buttonContainer.css({
                     'top': y,
                     'left': x
                 });
-            }, 5);
+                setTimeout(foo, 5);
+            })();
         }
 
         transitionToBreakout();
