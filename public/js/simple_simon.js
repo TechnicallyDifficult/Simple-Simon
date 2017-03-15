@@ -20,6 +20,25 @@ $(document).ready(function () {
             keylog = [],
             konami = 'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight b a';
 
+        function gameFlow() {
+            if (gameState == 'simonIdle') {
+                idle().done(function () {
+                    gameState = 'simonIntro';
+                    playIntro().done(function () {
+                        setTimeout(function () {
+                            gameState = 'simonComputerTurn';
+                            computerTurn().done(function () {
+                                gameState = 'simonPlayerTurn';
+                                playerTurn().done(function () {
+                                    successSequence();
+                                }).fail(failureSequence);
+                            });
+                        }, 500);
+                    });
+                });
+            }
+        }
+
         function chooseButton() {
             // first generate a random number between 0 and the number of buttons on the page
             var buttonIndex = getRandomInt(0, buttonCount);
@@ -29,8 +48,9 @@ $(document).ready(function () {
 
         function playIntro() {
             keylog = [];
+            var deferred = $.Deferred(),
             // a counter for determining when to stop the intro animation
-            var count = 0,
+                count = 0,
                 chosenButton = '';
             // the intro should cause the buttons to rapidly blink in a randomized order, using a timed recursive function
             (function foo() {
@@ -46,20 +66,25 @@ $(document).ready(function () {
                     count++;
                     setTimeout(foo, 50);
                 } else {
-                    // end the intro and proceed to the next phase of the game
-                    gameState = 'simonComputerTurn';
-                    setTimeout(computerTurn, 500);
+                    // end the intro and allow to proceed to the next phase of the game
+                    deferred.resolve();
                 }
             })();
+            return deferred.promise();
         }
 
         function computerTurn() {
+            var deferred = $.Deferred();
             buttonSequence.push(chooseButton());
-            playSequence(buttonSequence.length);
+            playSequence(buttonSequence.length).done(function () {
+                deferred.resolve();
+            });
+            return deferred.promise();
         }
 
         function playSequence(runCount) {
-            var i = 0;
+            var deferred = $.Deferred(),
+                i = 0;
             // this timed recursive function is used in place of setInterval
             (function foo() {
                 // on each run, either light up the button at the current index
@@ -74,10 +99,28 @@ $(document).ready(function () {
                     setTimeout(foo, 500);
                 // when the sequence is finished, proceed to the player's turn
                 } else {
-                    gameState = 'simonPlayerTurn';
-                    buttons.addClass('enabled-btn');
+                    deferred.resolve();
                 }
             })();
+            return deferred.promise();
+        }
+
+        function playerTurn() {
+            var deferred = $.Deferred();
+            buttons.addClass('enabled-btn');
+            buttons.click(function () {
+                // if the ID of the button clicked matches the one in the current index of the array
+                if ($(this).attr('id') == buttonSequence[currentIndex].id) {
+                    currentIndex++;
+                    // if the player has finished clicking the buttons in the correct order...
+                    if (currentIndex == buttonSequence.length) {
+                        deferred.resolve();
+                    }
+                } else {
+                    deferred.reject();
+                }
+            });
+            return deferred.promise();
         }
 
         function addButton(complete, delay) {
@@ -174,39 +217,70 @@ $(document).ready(function () {
             }
         }
 
-        buttons.click(function () {
-            if (gameState == 'simonIdle') {
+        function idle() {
+            var btnsDeferred = [$.Deferred(), $.Deferred(), $.Deferred(), $.Deferred()];
+            if (buttonCount < 4) {
+                btnsDeferred[2].resolve();
+                btnsDeferred[3].resolve();
+                if (buttonCount < 2) {
+                    btnsDeferred[1].resolve();
+                }
+            }
+            buttons.click(function () {
                 // Is the button clicked lit up?
                 $(this).toggleClass('lit-btn');
                 // Are all buttons now lit up?
-                for (var i = 0; i < buttonCount; i++) {
-                    // if at any point a button that is off is encountered...
-                    if (!$(buttons[i]).hasClass('lit-btn')) {
-                        buttonsOn = false;
-                        break;
+                buttons.each(function(index, element) {
+                    if ($(element).hasClass('lit-btn')) {
+                        btnsDeferred[index].resolve();
                     } else {
-                        buttonsOn = true;
+                        btnsDeferred[index].reject();
                     }
-                }
-                if (buttonsOn) {
-                    buttons.removeClass('enabled-btn lit-btn');
-                    buttonsOn = false;
-                    gameState = 'simonIntro';
-                    playIntro();
-                }
-            } else if (gameState == 'simonPlayerTurn') {
-                // if the ID of the button clicked matches the one in the current index of the array
-                if ($(this).attr('id') == buttonSequence[currentIndex].id) {
-                    currentIndex++;
-                    // if the player has finished clicking the buttons in the correct order...
-                    if (currentIndex == buttonSequence.length) {
-                        successSequence();
-                    }
-                } else {
-                    failureSequence();
-                }
-            }
-        });
+                });
+            });
+            return $.when.apply($, btnsDeferred).done(function () {
+                buttons.removeClass('enabled-btn lit-btn');
+                buttonsOn = false;
+                buttons.off('click');
+            }).promise();
+        }
+
+        gameFlow();
+
+        // buttons.click(function () {
+        //     console.log('button was clicked!')
+        //     if (gameState == 'simonIdle') {
+        //         // Is the button clicked lit up?
+        //         $(this).toggleClass('lit-btn');
+        //         // Are all buttons now lit up?
+        //         for (var i = 0; i < buttonCount; i++) {
+        //             // if at any point a button that is off is encountered...
+        //             if (!$(buttons[i]).hasClass('lit-btn')) {
+        //                 buttonsOn = false;
+        //                 break;
+        //             } else {
+        //                 buttonsOn = true;
+        //             }
+        //         }
+        //         if (buttonsOn) {
+        //             buttons.removeClass('enabled-btn lit-btn');
+        //             buttonsOn = false;
+        //             gameFlow();
+        //             buttons.off('click');
+        //         }
+        //     } else if (gameState == 'simonPlayerTurn') {
+        //         // if the ID of the button clicked matches the one in the current index of the array
+        //         if ($(this).attr('id') == buttonSequence[currentIndex].id) {
+        //             currentIndex++;
+        //             // if the player has finished clicking the buttons in the correct order...
+        //             if (currentIndex == buttonSequence.length) {
+        //                 successSequence();
+        //             }
+        //         } else {
+        //             failureSequence();
+        //         }
+        //     }
+        // });
 
         // this allows the user to enter the konami code when simon is in idle mode to skip directly to breakout. If not all the buttons have been added yet, it does so.
         $(document).keyup(function(event) {
