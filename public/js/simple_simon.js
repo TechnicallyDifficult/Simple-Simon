@@ -12,8 +12,7 @@
     }
 
     // function simon() {
-        var buttonsOn = false,
-            buttonSequence = [],
+        var buttonSequence = [],
             currentIndex = 0,
             currentRound = 0,
             buttonCount = 1,
@@ -24,6 +23,8 @@
             switch (gameState) {
                 case 'simonIdle':
                     idle().done(function () {
+                        buttons.off('click');
+                        buttons.removeClass('enabled-btn lit-btn');
                         gameState = 'simonIntro';
                         gameFlow();
                     });
@@ -44,9 +45,11 @@
                     break;
                 case 'simonPlayerTurn':
                     playerTurn().done(function () {
+                        buttons.off('click');
                         gameState = 'simonSuccessSequence';
                         gameFlow();
                     }).fail(function () {
+                        buttons.off('click');
                         gameState = 'simonFailureSequence';
                         gameFlow();
                     });
@@ -81,6 +84,20 @@
                     });
                     break;
             }
+        }
+
+        function idle() {
+            var deferred = $.Deferred();
+            buttons.click(function () {
+                console.log('idle button was clicked!')
+                // Is the button clicked lit up?
+                $(this).toggleClass('lit-btn');
+                // Are all buttons now lit up?
+                if ($('.lit-btn').length == buttonCount) {
+                    deferred.resolve();
+                }
+            });
+            return deferred.promise();
         }
 
         function chooseButton() {
@@ -167,7 +184,7 @@
             return deferred.promise();
         }
 
-        function addButton(complete, delay) {
+        function addButton() {
             var deferredMain = $.Deferred();
             switch (buttonCount) {
                 case 1:
@@ -235,7 +252,6 @@
         function failureSequence() {
             // this function causes all buttons to light up for a brief moment
             var deferred = $.Deferred();
-            buttons.off('click');
             buttons.toggleClass('enabled-btn lit-btn');
             setTimeout(function () {
                 // and then everything is reset except the number of buttons in play
@@ -251,7 +267,6 @@
 
         function successSequence() {
             var deferred = $.Deferred();
-            buttons.off('click');
             buttons.removeClass('enabled-btn');
             currentIndex = 0;
             currentRound++;
@@ -277,34 +292,6 @@
                 })();
             }
             return deferred.promise();
-        }
-
-        function idle() {
-            var btnsDeferred = [$.Deferred(), $.Deferred(), $.Deferred(), $.Deferred()];
-            if (buttonCount < 4) {
-                btnsDeferred[2].resolve();
-                btnsDeferred[3].resolve();
-                if (buttonCount < 2) {
-                    btnsDeferred[1].resolve();
-                }
-            }
-            buttons.click(function () {
-                // Is the button clicked lit up?
-                $(this).toggleClass('lit-btn');
-                // Are all buttons now lit up?
-                buttons.each(function(index, element) {
-                    if ($(element).hasClass('lit-btn')) {
-                        btnsDeferred[index].resolve();
-                    } else {
-                        btnsDeferred[index].reject();
-                    }
-                });
-            });
-            return $.when.apply($, btnsDeferred).done(function () {
-                buttons.removeClass('enabled-btn lit-btn');
-                buttonsOn = false;
-                buttons.off('click');
-            }).promise();
         }
 
         gameFlow();
