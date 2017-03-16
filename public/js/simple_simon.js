@@ -354,6 +354,7 @@
             lives = 2,
             bricksBroken = 0,
             currentRound = 0;
+        const paddle = $('#paddle');
 
         function gameFlow() {
             switch (gameState) {}
@@ -444,12 +445,9 @@
         // this function also shows the round counter
         function showPaddle() {
             // the round counter has some properties set and then fades into existence
-            $('#round-counter').css('color', 'white').text(currentRound).fadeIn({
-                'duration': 700,
-                'easing': 'linear'
-            });
+            $('#round-counter').css('color', 'white').text(currentRound).fadeIn(700);
             // the paddle receives the same animation treatment as the lives
-            $('#paddle').removeClass('hidden').animate({
+            paddle.removeClass('hidden').animate({
                 'height': '24px',
                 'width': '128px',
                 'left': '500px',
@@ -504,7 +502,7 @@
 
         function checkPaddleCollision() {
             // this function uses the same logic as checkBrickCollision to determine whether and how the ball is colliding with the paddle
-            if (y + dy > 514 && y + dy < 570 && x + dx + 32 > paddleX && x + dx < paddleX + 128) {
+            if (y + dy + 32 > parseInt(paddle.css('top')) && y + dy < parseInt(paddle.css('top')) + 24 && x + dx + 32 > paddleX && x + dx < paddleX + 128) {
                 if (!(x < paddleX + 128) || (x + dx + 32 > paddleX + 96)) {
                     // if the ball is colliding with the right side of the paddle or the rightmost 1/4th of the top of the paddle, set the ball's x-direction movement to the right
                     dx = 1;
@@ -523,11 +521,11 @@
                 dy = -dy;
             }
             // if the ball is colliding with the right or the left...
-            if (x + dx > $('#field').width() - 32 || x + dx < 0) {
+            if (x + dx + 32 > $('#field').width() || x + dx < 0) {
                 dx = -dx;
             }
             // if the ball is colliding with the bottom...
-            if (y + dy > $('#field').height() - 32) {
+            if (y + dy  + 32 > $('#field').height()) {
                 // freeze the ball's movement
                 gameState = 'breakoutLosingLife';
                 loseLife();
@@ -646,18 +644,18 @@
             gameState = 'breakout';
             // this event listener is placed here so that the paddle does not start moving until this function is called
             // it is what allows the mouse to control the paddle
-            $(document).mousemove(function(event) {
+            $(document).mousemove(function(e) {
                 // if the mouse cursor moves too far to the left, stop the paddle at the edge of the "field" until the mouse cursor is centered vertically with it again
-                if (event.pageX < $('#field').offset().left + 64) {
+                if (e.pageX < $('#field').offset().left + 64) {
                     paddleX = 0;
                 // do the same if the mouse cursor moves too far to the right
-                } else if (event.pageX > $('#field').offset().left + 936) {
+                } else if (e.pageX > $('#field').offset().left + 936) {
                     paddleX = 872;
                 } else {
                     // otherwise, make the paddle follow the mouse cursor
-                    paddleX = event.pageX - $('#field').offset().left - 64;
+                    paddleX = e.pageX - $('#field').offset().left - 64;
                 }
-                $('#paddle').css('left', paddleX);
+                paddle.css('left', paddleX);
             });
             // this is what actually causes the ball to move, another timed recursive function
             (function foo() {

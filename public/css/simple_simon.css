@@ -145,12 +145,6 @@ body {
     right: -2000px;
 }
 
-#paddle-container {
-    position: absolute;
-    bottom: 30px;
-    width: 1000px;
-}
-
 #paddle {
     background-color: #4D5057;
     border: 2px solid #393B40;
@@ -158,7 +152,6 @@ body {
     width: 0;
     position: absolute;
     top: 558px;
-    /*bottom: 42px;*/
     left: 564px;
 }
 
@@ -175,10 +168,6 @@ body {
     position: absolute;
     top: 78px;
     left: 278px;
-}
-
-#bricks-container {
-    position: absolute;
 }
 
 #lives-container {
