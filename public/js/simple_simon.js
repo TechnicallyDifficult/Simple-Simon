@@ -24,18 +24,47 @@ $(document).ready(function () {
             if (gameState == 'simonIdle') {
                 idle().done(function () {
                     gameState = 'simonIntro';
-                    playIntro().done(function () {
-                        setTimeout(function () {
-                            gameState = 'simonComputerTurn';
-                            computerTurn().done(function () {
-                                gameState = 'simonPlayerTurn';
-                                playerTurn().done(function () {
-                                    successSequence();
-                                }).fail(failureSequence);
-                            });
-                        }, 500);
-                    });
+                    gameFlow();
                 });
+            } else if (gameState == 'simonIntro') {
+                playIntro().done(function () {
+                    setTimeout(function () {
+                        gameState = 'simonComputerTurn';
+                        gameFlow();
+                    }, 500);
+                });
+            } else if (gameState == 'simonComputerTurn') {
+                computerTurn().done(function () {
+                    gameState = 'simonPlayerTurn';
+                    gameFlow();
+                });
+            } else if (gameState == 'simonPlayerTurn') {
+                playerTurn().done(function () {
+                    gameState = 'simonSuccessSequence';
+                    gameFlow();
+                }).fail(function () {
+                    gameState = 'simonFailureSequence';
+                    gameFlow();
+                });
+            } else if (gameState == 'simonSuccessSequence') {
+                successSequence().done(function (next) {
+                    if (next == 'computerTurn') {
+                        gameState = 'simonComputerTurn';
+                        setTimeout(gameFlow, 500);
+                    } else if (next == 'addButton') {
+                        gameState = 'simonAddButton';
+                        gameFlow();
+                    } else if (next == 'breakout') {
+                        breakout();
+                    }
+                });
+            } else if (gameState == 'simonFailureSequence') {
+                failureSequence().done(function () {
+                    gameState = 'simonIdle';
+                    gameFlow();
+                });
+            } else if (gameState == 'simonAddButton') {
+                addButton();
             }
         }
 
@@ -176,32 +205,35 @@ $(document).ready(function () {
 
         function failureSequence() {
             // this function causes all buttons to light up for a brief moment
-            gameState = 'simonFailureSequence';
+            var deferred = $.Deferred();
+            buttons.off('click');
             buttons.toggleClass('enabled-btn lit-btn');
             setTimeout(function () {
                 // and then everything is reset except the number of buttons in play
                 buttonSequence = [];
                 currentIndex = 0;
-                currentRound = 1;
-                $('#round-counter').text(currentRound - 1);
-                gameState = 'simonIdle';
+                currentRound = 0;
+                $('#round-counter').text(currentRound);
                 buttons.toggleClass('enabled-btn lit-btn');
+                deferred.resolve();
             }, 1500);
+            return deferred.promise();
         }
 
         function successSequence() {
-            // just like with the intro, a counter for determining when to stop the success animation
+            var deferred = $.Deferred();
+            buttons.off('click');
             buttons.removeClass('enabled-btn');
-            gameState = 'simonComputerTurn';
             currentIndex = 0;
             currentRound++;
             $('#round-counter').text(currentRound);
             // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
             if ((currentRound == 2 && buttonCount < 2) || (currentRound == 5 && buttonCount < 4)) {
-                addButton(computerTurn, 500);
+                // addButton(computerTurn, 500);
+                deferred.resolve('addButton');
             // on round 10, begin transition into breakout
             } else if (currentRound == 10) {
-                breakout();
+                deferred.resolve('breakout');
             } else {
                 // otherwise, play the normal success animation and proceed to the computer's turn
                 var count = 0;
@@ -211,10 +243,12 @@ $(document).ready(function () {
                         count++;
                         setTimeout(foo, 50);
                     } else {
-                        setTimeout(computerTurn, 400);
+                        // setTimeout(computerTurn, 500);
+                        deferred.resolve('computerTurn');
                     }
                 })();
             }
+            return deferred.promise();
         }
 
         function idle() {
