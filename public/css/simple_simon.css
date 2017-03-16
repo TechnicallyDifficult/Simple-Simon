@@ -85,11 +85,9 @@ body {
 
 .brick {
     border: 2px solid;
-    display: inline-block;
     height: 32px;
     width: 100px;
-    position: relative;
-    top: 20px;
+    position: absolute;
 }
 
 .red {
@@ -185,7 +183,6 @@ body {
 
 #bricks-container {
     position: absolute;
-    top: 48px;
 }
 
 #lives-container {

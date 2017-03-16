@@ -344,15 +344,14 @@
     }
 
     function breakout() {
-        gameState = 'breakout';
-        var x = ($('#field').width() / 2),
+        var gameState = 'breakout',
+            x = ($('#field').width() / 2),
             y = ($('#field').height() / 2),
             dx = 1,
             dy = 1,
             gameInitialized = false,
             paddleX = ($('#field').width() / 2),
             lives = 2,
-            ballMoveInterval,
             bricksBroken = 0,
             currentRound = 0;
 
@@ -361,12 +360,11 @@
         }
 
         function transitionToBreakout() {
-            // first, the round counter fades out
             $('#round-counter').fadeOut({
                 'duration': 1000,
                 'easing': 'linear'
             });
-            // and the background fades to black
+            // the background fades to black
             $('body').addClass('fade-to-black').one('webkitAnimationEnd oanimationend oAnimationEnd msAnimationEnd animationend', function(event) {
                 // when that finishes, after a brief delay, the buttons all shrink
                 setTimeout(function () {
@@ -415,11 +413,11 @@
                 case 'top':
                     // if the index is less than 10, the brick is obviously on the top row and therefore has a top value of 48 since there are 48 pixels of space above the entire field of bricks
                     if (index < 10) {
-                        return 48;
+                        return 80;
                     } else {
                         // otherwise, the value of the top side of the brick is equal to the value of the first digit of its index times the height of each brick (32), then plus 48 pixels to account for the empty space above all the bricks
                         position = parseInt(indexString.substring(0, 1));
-                        return (position * 32) + 48;
+                        return (position * 32) + 80;
                     }
                 case 'right':
                     // finding the value of the right side of each brick is done exactly the same way as finding the left side's value, except with 1 extra added to the value that will be multiplied by 100, as the right side of each brick is exactly 100 pixels away from the left side
@@ -428,11 +426,11 @@
                 case 'bottom':
                     // finding the bottom value of a brick is easy if its index is less than 10 (and therefore is on the top row), as all of them will have a value of 80 (the height of the empty space + the height of each brick)
                     if (index < 10) {
-                        return 80;
+                        return 112;
                     } else {
                         // finding the bottom value of all other bricks is a little more difficult, but is no different than finding the top value of them except for an extra 32 pixels (and thus, we add 1 to position)
                         position = parseInt(indexString.substring(0, 1));
-                        return ((position + 1) * 32) + 48;
+                        return ((position + 1) * 32) + 80;
                     }
             }
         }
@@ -444,11 +442,11 @@
                 $(element).removeClass('red yellow green blue').addClass(chooseColor());
                 // then, if it hasn't been done already, data attributes are added to each, using the setHitbox function to determine the value of each by passing in the brick's index and a string telling it which value to calculate
                 if (!gameInitialized) {
-                    $(element).attr({
-                        'data-left': setHitbox(index, 'left'),
-                        'data-top': setHitbox(index, 'top'),
-                        'data-right': setHitbox(index, 'right'),
-                        'data-bottom': setHitbox(index, 'bottom')
+                    $(element).css({
+                        'left': setHitbox(index, 'left'),
+                        'top': setHitbox(index, 'top'),
+                        'right': setHitbox(index, 'right'),
+                        'bottom': setHitbox(index, 'bottom')
                     });
                 }
             });
@@ -718,7 +716,7 @@
             })();
         }
 
-        gameFlow();
+        transitionToBreakout();
     }
 
     simon();
