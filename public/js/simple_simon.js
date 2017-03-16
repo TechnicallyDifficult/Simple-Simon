@@ -40,16 +40,18 @@
                 case 'simonComputerTurn':
                     computerTurn().done(function () {
                         gameState = 'simonPlayerTurn';
+                        buttons.addClass('enabled-btn');
                         gameFlow();
                     });
                     break;
                 case 'simonPlayerTurn':
-                    playerTurn().done(function () {
+                    playerTurn().always(function () {
                         buttons.off('click');
+                        buttons.removeClass('enabled-btn');
+                    }).done(function () {
                         gameState = 'simonSuccessSequence';
                         gameFlow();
                     }).fail(function () {
-                        buttons.off('click');
                         gameState = 'simonFailureSequence';
                         gameFlow();
                     });
@@ -73,6 +75,7 @@
                     break;
                 case 'simonFailureSequence':
                     failureSequence().done(function () {
+                        buttons.addClass('enabled-btn');
                         gameState = 'simonIdle';
                         gameFlow();
                     });
@@ -89,7 +92,6 @@
         function idle() {
             var deferred = $.Deferred();
             buttons.click(function () {
-                console.log('idle button was clicked!')
                 // Is the button clicked lit up?
                 $(this).toggleClass('lit-btn');
                 // Are all buttons now lit up?
@@ -168,7 +170,6 @@
 
         function playerTurn() {
             var deferred = $.Deferred();
-            buttons.addClass('enabled-btn');
             buttons.click(function () {
                 // if the ID of the button clicked matches the one in the current index of the array
                 if ($(this).attr('id') == buttonSequence[currentIndex].id) {
@@ -252,14 +253,14 @@
         function failureSequence() {
             // this function causes all buttons to light up for a brief moment
             var deferred = $.Deferred();
-            buttons.toggleClass('enabled-btn lit-btn');
+            buttons.addClass('lit-btn');
             setTimeout(function () {
                 // and then everything is reset except the number of buttons in play
                 buttonSequence = [];
                 currentIndex = 0;
                 currentRound = 0;
                 $('#round-counter').text(currentRound);
-                buttons.toggleClass('enabled-btn lit-btn');
+                buttons.removeClass('lit-btn');
                 deferred.resolve();
             }, 1500);
             return deferred.promise();
@@ -267,7 +268,6 @@
 
         function successSequence() {
             var deferred = $.Deferred();
-            buttons.removeClass('enabled-btn');
             currentIndex = 0;
             currentRound++;
             $('#round-counter').text(currentRound);
@@ -286,7 +286,6 @@
                         count++;
                         setTimeout(foo, 50);
                     } else {
-                        // setTimeout(computerTurn, 500);
                         deferred.resolve('computerTurn');
                     }
                 })();
