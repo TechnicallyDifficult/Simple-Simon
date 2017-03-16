@@ -400,41 +400,6 @@
             }
         }
 
-        // This function calculates the value to be used in the data attributes that will be added to each brick for the purpose of later checking collisions
-        function setHitbox(index, side) {
-            var position,
-                // the passed-in index is converted into a string so that it can be divided up later
-                indexString = index.toString();
-            switch (side) {
-                case 'left':
-                    // find the last character in the index, convert it back to an interger, and multiply that by the width of each brick (100). This will be the value for the brick's left side
-                    position = parseInt(indexString.substring(indexString.length - 1));
-                    return position * 100;
-                case 'top':
-                    // if the index is less than 10, the brick is obviously on the top row and therefore has a top value of 48 since there are 48 pixels of space above the entire field of bricks
-                    if (index < 10) {
-                        return 80;
-                    } else {
-                        // otherwise, the value of the top side of the brick is equal to the value of the first digit of its index times the height of each brick (32), then plus 48 pixels to account for the empty space above all the bricks
-                        position = parseInt(indexString.substring(0, 1));
-                        return (position * 32) + 80;
-                    }
-                case 'right':
-                    // finding the value of the right side of each brick is done exactly the same way as finding the left side's value, except with 1 extra added to the value that will be multiplied by 100, as the right side of each brick is exactly 100 pixels away from the left side
-                    position = parseInt(indexString.substring(indexString.length - 1));
-                    return (position + 1) * 100;
-                case 'bottom':
-                    // finding the bottom value of a brick is easy if its index is less than 10 (and therefore is on the top row), as all of them will have a value of 80 (the height of the empty space + the height of each brick)
-                    if (index < 10) {
-                        return 112;
-                    } else {
-                        // finding the bottom value of all other bricks is a little more difficult, but is no different than finding the top value of them except for an extra 32 pixels (and thus, we add 1 to position)
-                        position = parseInt(indexString.substring(0, 1));
-                        return ((position + 1) * 32) + 80;
-                    }
-            }
-        }
-
         // this function has two main parts
         function initializeBricks(complete) {
             $('.brick').each(function (index, element) {
@@ -443,10 +408,9 @@
                 // then, if it hasn't been done already, data attributes are added to each, using the setHitbox function to determine the value of each by passing in the brick's index and a string telling it which value to calculate
                 if (!gameInitialized) {
                     $(element).css({
-                        'left': setHitbox(index, 'left'),
-                        'top': setHitbox(index, 'top'),
-                        'right': setHitbox(index, 'right'),
-                        'bottom': setHitbox(index, 'bottom')
+                        // find the last character in the index, convert it back to an interger, and multiply that by the width of each brick (100). This will be the value to offset the brick from the left by
+                        'left': parseInt(index.toString().substring(index.toString().length - 1)) * 100,
+                        'top': (parseInt(index / 10) * 32) + 80
                     });
                 }
             });
