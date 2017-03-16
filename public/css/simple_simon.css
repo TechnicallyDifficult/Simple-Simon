@@ -156,8 +156,9 @@ body {
     border: 2px solid #393B40;
     height: 0;
     width: 0;
-    position: relative;
-    bottom: 12px;
+    position: absolute;
+    top: 558px;
+    /*bottom: 42px;*/
     left: 564px;
 }
 

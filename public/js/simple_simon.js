@@ -453,7 +453,7 @@
                 'height': '24px',
                 'width': '128px',
                 'left': '500px',
-                'bottom': '0px',
+                'top': '546px'
             }, 700, function () {
                 // after a delay, the main draw function is called, which starts the ball moving
                 gameInitialized = true;
