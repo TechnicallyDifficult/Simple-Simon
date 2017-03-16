@@ -414,12 +414,11 @@
                     });
                 }
             });
-            $('#bricks-container').removeClass('hidden');
             var i = 0;
             // here, a timed recursive function is used to show the bricks one by one in a rapid succession (but not all at once) for increased visual appeal
             (function foo() {
                 if (i < 30) {
-                    $('.brick').eq(i).removeClass('hidden').addClass('active-brick');
+                    $('.brick').eq(i).toggleClass('hidden active-brick');
                     i++;
                     setTimeout(foo, 100);
                 } else {
@@ -482,19 +481,19 @@
         function checkBrickCollision() {
             $('.active-brick').each(function (index, element) {
                 // if, on the next interval, the ball would be moved inside the brick being checked...
-                if (y + dy + 16 > $(element).attr('data-top') && x + dx < $(element).attr('data-right') && y + dy - 16 < $(element).attr('data-bottom') && x + dx + 32 > $(element).attr('data-left')) {
-                    $(element).removeClass('active-brick').addClass('hidden');
+                if (y + dy + 32 > parseInt($(element).css('top')) && x + dx < parseInt($(element).css('left')) + 100 && y + dy < parseInt($(element).css('top')) + 32 && x + dx + 32 > parseInt($(element).css('left'))) {
+                    $(element).toggleClass('active-brick hidden');
                     bricksBroken++;
-                    if (bricksBroken == 30) {
+                    if ($('.brick.hidden').length == $('.brick').length) {
                         roundProgress();
                     } else {
                         // on which axis should the ball be reflected?
                         // if the ball is not already both above the brick's bottom boundary and below the brick's top boundary, then it must be colliding with the brick from either the top or the bottom
-                        if (!(y + 16 > $(element).attr('data-top')) || !(y - 16 < $(element).attr('data-bottom'))) {
+                        if (!(y + 32 > parseInt($(element).css('top'))) || !(y < parseInt($(element).css('top')) + 32)) {
                             // therefore, the ball's y-axis movement should be reversed
                             dy = -dy;
                         // otherwise, if the ball is not already between both of the brick's side boundaries, then it must be colliding with one of the sides
-                        } else if (!(x < $(element).attr('data-right')) || !(x + 32 > $(element).attr('data-left'))) {
+                        } else if (!(x + 32 > parseInt($(element).css('left'))) || !(x < parseInt($(element).css('left')) + 100)) {
                             // therefore, the ball's x-asis movement should be reversed
                             dx = -dx;
                         }
