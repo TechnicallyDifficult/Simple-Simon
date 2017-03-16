@@ -308,11 +308,11 @@
                 deferred.resolve('breakout');
             } else {
                 // otherwise, play the normal success animation and proceed to the computer's turn
-                var count = 0;
+                var i = 0;
                 (function foo() {
-                    if (count < 20) {
+                    if (i < 20) {
                         buttons.toggleClass('lit-btn');
-                        count++;
+                        i++;
                         setTimeout(foo, 50);
                     } else {
                         deferred.resolve('computerTurn');
@@ -415,12 +415,11 @@
                 }
             });
             $('#bricks-container').removeClass('hidden');
-            // a variable for determining when to stop the recursive function
             var i = 0;
             // here, a timed recursive function is used to show the bricks one by one in a rapid succession (but not all at once) for increased visual appeal
             (function foo() {
                 if (i < 30) {
-                    $('.brick').eq(i).removeClass('hidden hidden-brick').addClass('active-brick');
+                    $('.brick').eq(i).removeClass('hidden').addClass('active-brick');
                     i++;
                     setTimeout(foo, 100);
                 } else {
@@ -484,7 +483,7 @@
             $('.active-brick').each(function (index, element) {
                 // if, on the next interval, the ball would be moved inside the brick being checked...
                 if (y + dy + 16 > $(element).attr('data-top') && x + dx < $(element).attr('data-right') && y + dy - 16 < $(element).attr('data-bottom') && x + dx + 32 > $(element).attr('data-left')) {
-                    $(element).removeClass('active-brick').addClass('hidden-brick');
+                    $(element).removeClass('active-brick').addClass('hidden');
                     bricksBroken++;
                     if (bricksBroken == 30) {
                         roundProgress();
@@ -613,7 +612,7 @@
                 'opacity': 0
             }, 1000).promise().done(function () {
                 // then some properties are set on them so that the game can be easily restarted
-                $('.brick').removeClass('active-brick').addClass('hidden-brick').css('opacity', '100');
+                $('.brick').removeClass('active-brick').addClass('hidden').css('opacity', '100');
                 setTimeout(function () {
                     // after a delay, the game over message appears
                     $('#gameover-message').removeClass('hidden');

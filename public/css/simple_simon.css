@@ -110,11 +110,6 @@ body {
     border-color: #3161B2;
 }
 
-.hidden-brick {
-    border: none;
-    background-color: transparent;
-}
-
 .fade-to-black {
     -webkit-animation: fadeToBlack 1s linear 1;
     -moz-animation: fadeToBlack 1s linear 1;
