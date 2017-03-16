@@ -1,9 +1,8 @@
 // $(document).ready(function () {
     'use strict';
 
-    var gameState = 'simonIdle',
-        buttons = $('.game-btn'),
-        buttonContainer = $('#button-container');
+    const buttons = $('.game-btn');
+    const buttonContainer = $('#button-container');
 
     function getRandomInt(min, max) {
       min = Math.ceil(min);
@@ -12,102 +11,105 @@
     }
 
     function simon() {
-        var buttonSequence = [],
+        var gameState = 'idle',
+            buttonSequence = [],
             currentIndex = 0,
             currentRound = 0,
             buttonCount = 1;
 
         function gameFlow() {
+            var deferred = $.Deferred();
             switch (gameState) {
-                case 'simonIdle':
+                case 'idle':
                     idle().done(function (next) {
                         $(document).off('keyup');
                         buttons.off('click');
                         buttons.removeClass('enabled-btn lit-btn');
                         switch (next) {
                             case 'start':
-                                gameState = 'simonIntro';
+                                gameState = 'intro';
                                 break;
                             case 'konami':
-                                gameState = 'simonKonamiSkip';
+                                gameState = 'konamiSkip';
+                                break;
                         }
-                        gameFlow();
+                        deferred.resolve();
                     });
                     break;
-                case 'simonIntro':
+                case 'intro':
                     playIntro().done(function () {
-                        setTimeout(function () {
-                            gameState = 'simonComputerTurn';
-                            gameFlow();
-                        }, 500);
+                        gameState = 'computerTurn';
+                        setTimeout(deferred.resolve, 500);
                     });
                     break;
-                case 'simonComputerTurn':
+                case 'computerTurn':
                     computerTurn().done(function () {
-                        gameState = 'simonPlayerTurn';
+                        gameState = 'playerTurn';
                         buttons.addClass('enabled-btn');
-                        gameFlow();
+                        deferred.resolve();
                     });
                     break;
-                case 'simonPlayerTurn':
-                    playerTurn().always(function () {
+                case 'playerTurn':
+                    playerTurn().done(function (next) {
+                        $(document).off('keyup');
                         buttons.off('click');
                         buttons.removeClass('enabled-btn');
-                        $(document).off('keyup');
-                    }).done(function (next) {
                         switch (next) {
                             case 'success':
-                                gameState = 'simonSuccessSequence';
-                                gameFlow();
+                                gameState = 'successSequence';
                                 break;
                             case 'konami':
-                                gameState = 'simonKonamiSkip';
-                                gameFlow();
+                                gameState = 'konamiSkip';
+                                break;
+                            case 'failure':
+                                gameState = 'failureSequence';
+                                break;
                         }
-                    }).fail(function () {
-                        gameState = 'simonFailureSequence';
-                        gameFlow();
+                        deferred.resolve();
                     });
                     break;
-                case 'simonSuccessSequence':
+                case 'successSequence':
                     successSequence().done(function (next) {
                         switch (next) {
                             case 'computerTurn':
-                                gameState = 'simonComputerTurn';
-                                setTimeout(gameFlow, 500);
+                                gameState = 'computerTurn';
+                                setTimeout(deferred.resolve, 500);
                                 break;
                             case 'addButton':
-                                gameState = 'simonAddButton';
-                                gameFlow();
+                                gameState = 'addButton';
+                                deferred.resolve();
                                 break;
                             case 'breakout':
-                                breakout();
+                                deferred.reject();
                                 break;
                         }
                     });
                     break;
-                case 'simonFailureSequence':
+                case 'failureSequence':
                     failureSequence().done(function () {
                         buttons.addClass('enabled-btn');
-                        gameState = 'simonIdle';
-                        gameFlow();
+                        gameState = 'idle';
+                        deferred.resolve();
                     });
                     break;
-                case 'simonAddButton':
+                case 'addButton':
                     addButton().done(function () {
-                        gameState = 'simonComputerTurn';
-                        setTimeout(gameFlow, 500);
+                        gameState = 'computerTurn';
+                        setTimeout(deferred.resolve, 500);
                     });
                     break;
-                case 'simonKonamiSkip':
+                case 'konamiSkip':
                     if (buttonCount < 4) {
                         addButton().done(function () {
-                            setTimeout(gameFlow, 300);
+                            setTimeout(deferred.resolve, 300);
                         });
                     } else {
-                        breakout();
+                        deferred.reject();
                     }
             }
+            deferred.promise()
+            .done(gameFlow)
+            .fail(breakout);
         }
 
         function idle() {
@@ -206,7 +208,7 @@
                     }
                 // if the player at any point in the sequence makes a mistake...
                 } else {
-                    deferred.reject();
+                    deferred.resolve('failure');
                 }
             });
             return deferred.promise();
@@ -353,6 +355,10 @@
             ballMoveInterval,
             bricksBroken = 0,
             currentRound = 0;
+
+        function gameFlow() {
+            switch (gameState) {}
+        }
 
         function transitionToBreakout() {
             // first, the round counter fades out
@@ -712,7 +718,7 @@
             })();
         }
 
-        transitionToBreakout();
+        gameFlow();
     }
 
     simon();
