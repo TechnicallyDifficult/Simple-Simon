@@ -11,21 +11,26 @@
       return Math.floor(Math.random() * (max - min)) + min;
     }
 
-    // function simon() {
+    function simon() {
         var buttonSequence = [],
             currentIndex = 0,
             currentRound = 0,
-            buttonCount = 1,
-            keylog = [],
-            konami = 'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight b a';
+            buttonCount = 1;
 
         function gameFlow() {
             switch (gameState) {
                 case 'simonIdle':
-                    idle().done(function () {
+                    idle().done(function (next) {
+                        $(document).off('keyup');
                         buttons.off('click');
                         buttons.removeClass('enabled-btn lit-btn');
-                        gameState = 'simonIntro';
+                        switch (next) {
+                            case 'start':
+                                gameState = 'simonIntro';
+                                break;
+                            case 'konami':
+                                gameState = 'simonKonamiSkip';
+                        }
                         gameFlow();
                     });
                     break;
@@ -48,9 +53,17 @@
                     playerTurn().always(function () {
                         buttons.off('click');
                         buttons.removeClass('enabled-btn');
-                    }).done(function () {
-                        gameState = 'simonSuccessSequence';
-                        gameFlow();
+                        $(document).off('keyup');
+                    }).done(function (next) {
+                        switch (next) {
+                            case 'success':
+                                gameState = 'simonSuccessSequence';
+                                gameFlow();
+                                break;
+                            case 'konami':
+                                gameState = 'simonKonamiSkip';
+                                gameFlow();
+                        }
                     }).fail(function () {
                         gameState = 'simonFailureSequence';
                         gameFlow();
@@ -86,17 +99,28 @@
                         setTimeout(gameFlow, 500);
                     });
                     break;
+                case 'simonKonamiSkip':
+                    if (buttonCount < 4) {
+                        addButton().done(function () {
+                            setTimeout(gameFlow, 300);
+                        });
+                    } else {
+                        breakout();
+                    }
             }
         }
 
         function idle() {
             var deferred = $.Deferred();
+            konami().done(function () {
+                deferred.resolve('konami');
+            });
             buttons.click(function () {
                 // Is the button clicked lit up?
                 $(this).toggleClass('lit-btn');
                 // Are all buttons now lit up?
                 if ($('.lit-btn').length == buttonCount) {
-                    deferred.resolve();
+                    deferred.resolve('start');
                 }
             });
             return deferred.promise();
@@ -110,7 +134,6 @@
         }
 
         function playIntro() {
-            keylog = [];
             var deferred = $.Deferred(),
             // a counter for determining when to stop the intro animation
                 count = 0,
@@ -170,14 +193,18 @@
 
         function playerTurn() {
             var deferred = $.Deferred();
+            konami().done(function () {
+                deferred.resolve('konami');
+            });
             buttons.click(function () {
                 // if the ID of the button clicked matches the one in the current index of the array
                 if ($(this).attr('id') == buttonSequence[currentIndex].id) {
                     currentIndex++;
                     // if the player has finished clicking the buttons in the correct order...
                     if (currentIndex == buttonSequence.length) {
-                        deferred.resolve();
+                        deferred.resolve('success');
                     }
+                // if the player at any point in the sequence makes a mistake...
                 } else {
                     deferred.reject();
                 }
@@ -293,73 +320,26 @@
             return deferred.promise();
         }
 
-        gameFlow();
-
-        // buttons.click(function () {
-        //     console.log('button was clicked!')
-        //     if (gameState == 'simonIdle') {
-        //         // Is the button clicked lit up?
-        //         $(this).toggleClass('lit-btn');
-        //         // Are all buttons now lit up?
-        //         for (var i = 0; i < buttonCount; i++) {
-        //             // if at any point a button that is off is encountered...
-        //             if (!$(buttons[i]).hasClass('lit-btn')) {
-        //                 buttonsOn = false;
-        //                 break;
-        //             } else {
-        //                 buttonsOn = true;
-        //             }
-        //         }
-        //         if (buttonsOn) {
-        //             buttons.removeClass('enabled-btn lit-btn');
-        //             buttonsOn = false;
-        //             gameFlow();
-        //             buttons.off('click');
-        //         }
-        //     } else if (gameState == 'simonPlayerTurn') {
-        //         // if the ID of the button clicked matches the one in the current index of the array
-        //         if ($(this).attr('id') == buttonSequence[currentIndex].id) {
-        //             currentIndex++;
-        //             // if the player has finished clicking the buttons in the correct order...
-        //             if (currentIndex == buttonSequence.length) {
-        //                 successSequence();
-        //             }
-        //         } else {
-        //             failureSequence();
-        //         }
-        //     }
-        // });
-
-        // this allows the user to enter the konami code when simon is in idle mode to skip directly to breakout. If not all the buttons have been added yet, it does so.
-        $(document).keyup(function(event) {
-            if (gameState == 'simonIdle' || gameState == 'simonPlayerTurn') {
+        function konami() {
+            var keylog = [],
+                deferred = $.Deferred();
+            const konami = 'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight b a';
+            // this allows the user to enter the konami code when simon is in idle mode to skip directly to breakout. If not all the buttons have been added yet, it does so.
+            $(document).keyup(function(e) {
                 // if the keylog is full, just get rid of the first value in the array
                 if (keylog.length == 10) {
                     keylog.shift();
                 }
-                keylog.push(event.key);
+                keylog.push(e.key);
                 if (keylog.join(' ').toUpperCase() == konami.toUpperCase()) {
-                    // make sure the buttons are disabled and unlit so that breakout works exactly as intended
-                    buttons.removeClass('enabled-btn lit-btn');
-                    gameState = 'breakoutTransition';
-                    // I would just use a loop here, but if I do, it won't wait until the animation finishes before continuing on with the execution
-                    if (buttonCount < 4) {
-                        addButton(function () {
-                            // if the player initially entered the sequence with only one button onscreen (and thus, there's only two now)...
-                            if (buttonCount < 4) {
-                                addButton(breakout, 300);
-                            } else {
-                                breakout();
-                            }
-                        }, 300);
-                    // if the player entered the sequence with all four buttons onscreen...
-                    } else {
-                        breakout();
-                    }
+                    deferred.resolve();
                 }
-            }
-        });
-    // }
+            });
+            return deferred.promise();
+        }
+
+        gameFlow();
+    }
 
     function breakout() {
         gameState = 'breakout';
@@ -735,5 +715,5 @@
         transitionToBreakout();
     }
 
-    // simon();
+    simon();
 // });
