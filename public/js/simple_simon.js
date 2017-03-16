@@ -1,4 +1,4 @@
-$(document).ready(function () {
+// $(document).ready(function () {
     'use strict';
 
     var gameState = 'simonIdle',
@@ -11,7 +11,7 @@ $(document).ready(function () {
       return Math.floor(Math.random() * (max - min)) + min;
     }
 
-    function simon() {
+    // function simon() {
         var buttonsOn = false,
             buttonSequence = [],
             currentIndex = 0,
@@ -21,50 +21,65 @@ $(document).ready(function () {
             konami = 'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight b a';
 
         function gameFlow() {
-            if (gameState == 'simonIdle') {
-                idle().done(function () {
-                    gameState = 'simonIntro';
-                    gameFlow();
-                });
-            } else if (gameState == 'simonIntro') {
-                playIntro().done(function () {
-                    setTimeout(function () {
-                        gameState = 'simonComputerTurn';
+            switch (gameState) {
+                case 'simonIdle':
+                    idle().done(function () {
+                        gameState = 'simonIntro';
                         gameFlow();
-                    }, 500);
-                });
-            } else if (gameState == 'simonComputerTurn') {
-                computerTurn().done(function () {
-                    gameState = 'simonPlayerTurn';
-                    gameFlow();
-                });
-            } else if (gameState == 'simonPlayerTurn') {
-                playerTurn().done(function () {
-                    gameState = 'simonSuccessSequence';
-                    gameFlow();
-                }).fail(function () {
-                    gameState = 'simonFailureSequence';
-                    gameFlow();
-                });
-            } else if (gameState == 'simonSuccessSequence') {
-                successSequence().done(function (next) {
-                    if (next == 'computerTurn') {
+                    });
+                    break;
+                case 'simonIntro':
+                    playIntro().done(function () {
+                        setTimeout(function () {
+                            gameState = 'simonComputerTurn';
+                            gameFlow();
+                        }, 500);
+                    });
+                    break;
+                case 'simonComputerTurn':
+                    computerTurn().done(function () {
+                        gameState = 'simonPlayerTurn';
+                        gameFlow();
+                    });
+                    break;
+                case 'simonPlayerTurn':
+                    playerTurn().done(function () {
+                        gameState = 'simonSuccessSequence';
+                        gameFlow();
+                    }).fail(function () {
+                        gameState = 'simonFailureSequence';
+                        gameFlow();
+                    });
+                    break;
+                case 'simonSuccessSequence':
+                    successSequence().done(function (next) {
+                        switch (next) {
+                            case 'computerTurn':
+                                gameState = 'simonComputerTurn';
+                                setTimeout(gameFlow, 500);
+                                break;
+                            case 'addButton':
+                                gameState = 'simonAddButton';
+                                gameFlow();
+                                break;
+                            case 'breakout':
+                                breakout();
+                                break;
+                        }
+                    });
+                    break;
+                case 'simonFailureSequence':
+                    failureSequence().done(function () {
+                        gameState = 'simonIdle';
+                        gameFlow();
+                    });
+                    break;
+                case 'simonAddButton':
+                    addButton().done(function () {
                         gameState = 'simonComputerTurn';
                         setTimeout(gameFlow, 500);
-                    } else if (next == 'addButton') {
-                        gameState = 'simonAddButton';
-                        gameFlow();
-                    } else if (next == 'breakout') {
-                        breakout();
-                    }
-                });
-            } else if (gameState == 'simonFailureSequence') {
-                failureSequence().done(function () {
-                    gameState = 'simonIdle';
-                    gameFlow();
-                });
-            } else if (gameState == 'simonAddButton') {
-                addButton();
+                    });
+                    break;
             }
         }
 
@@ -153,6 +168,7 @@ $(document).ready(function () {
         }
 
         function addButton(complete, delay) {
+            var deferredMain = $.Deferred();
             switch (buttonCount) {
                 case 1:
                     $('#r-btn').animate({
@@ -169,38 +185,51 @@ $(document).ready(function () {
                             'top': '0'
                         }, 500, function () {
                             // perform this task when the animation finishes after a brief delay
-                            setTimeout(complete, delay);
+                            deferredMain.resolve();
+                            buttonCount = 2;
                         });
                     });
-                    buttonCount = 2;
                     break;
                 case 2:
+                    var deferred1 = $.Deferred(),
+                        deferred2 = $.Deferred(),
+                        deferred3 = $.Deferred(),
+                        deferred4 = $.Deferred();
                     $('#r-btn').animate({
                         // first, the red button morphs into a quarter-circle
                         'border-bottom-left-radius': '0',
                         'height': '220px'
-                    }, 700);
+                    }, 700, function () {
+                        deferred1.resolve();
+                    });
                     $('#y-btn').animate({
                         // at the same time as the red one, the yellow button does the same
                         'border-bottom-right-radius': '0',
                         'height': '220px'
                     }, 700, function () {
+                        deferred2.resolve();
+                    });
+                    $.when(deferred1, deferred2).done(function () {
                         $('#g-btn').removeClass('hidden').animate({
                             // when the yellow button's animation finishes (both buttons should finish at the same time), the green button is unhidden and slides into play
                             'left': '0'
-                        }, 700);
+                        }, 700, function () {
+                            deferred3.resolve();
+                        });
                         $('#b-btn').removeClass('hidden').animate({
                             // at the same time as the green one, the blue button does the same from the other side
                             'right': '0'
                         }, 700, function () {
-                            // perform this task when the animation completes after a brief delay
-                            setTimeout(complete, delay);
+                            deferred4.resolve();
                         });
                     });
-                    buttonCount = 4;
+                    $.when(deferred3, deferred4).done(function () {
+                        buttonCount = 4;
+                        deferredMain.resolve();
+                    });
                     break;
             }
-            buttons = $('.game-btn');
+            return deferredMain.promise();
         }
 
         function failureSequence() {
@@ -229,7 +258,6 @@ $(document).ready(function () {
             $('#round-counter').text(currentRound);
             // on round 3, add a new button if it hasn't been added already. Do this again on round 6.
             if ((currentRound == 2 && buttonCount < 2) || (currentRound == 5 && buttonCount < 4)) {
-                // addButton(computerTurn, 500);
                 deferred.resolve('addButton');
             // on round 10, begin transition into breakout
             } else if (currentRound == 10) {
@@ -345,7 +373,7 @@ $(document).ready(function () {
                 }
             }
         });
-    }
+    // }
 
     function breakout() {
         gameState = 'breakout';
@@ -721,5 +749,5 @@ $(document).ready(function () {
         transitionToBreakout();
     }
 
-    simon();
-});
+    // simon();
+// });
