@@ -142,7 +142,7 @@
                 count = 0,
                 chosenButton = '';
             // the intro should cause the buttons to rapidly blink in a randomized order, using a timed recursive function
-            (function foo() {
+            (function interval() {
                 if (count < 40) {
                     // on each run, no button has been chosen (and therefore, none are lit), choose one and light it. Otherwise, turn off the previously lit button
                     if (!chosenButton) {
@@ -153,7 +153,7 @@
                         chosenButton = '';
                     }
                     count++;
-                    setTimeout(foo, 50);
+                    setTimeout(interval, 50);
                 } else {
                     // end the intro and allow to proceed to the next phase of the game
                     deferred.resolve();
@@ -173,7 +173,7 @@
             var deferred = $.Deferred(),
                 i = 0;
             // this timed recursive function is used in place of setInterval
-            (function foo() {
+            (function interval() {
                 // on each run, either light up the button at the current index
                 if (i < runCount) {
                     if (!$(buttonSequence[i]).hasClass('lit-btn')) {
@@ -183,7 +183,7 @@
                         $(buttonSequence[i]).removeClass('lit-btn');
                         i++;
                     }
-                    setTimeout(foo, 500);
+                    setTimeout(interval, 500);
                 // when the sequence is finished, proceed to the player's turn
                 } else {
                     deferred.resolve();
@@ -307,11 +307,11 @@
             } else {
                 // otherwise, play the normal success animation and proceed to the computer's turn
                 var i = 0;
-                (function foo() {
+                (function interval() {
                     if (i < 20) {
                         buttons.toggleClass('lit-btn');
                         i++;
-                        setTimeout(foo, 50);
+                        setTimeout(interval, 50);
                     } else {
                         deferred.resolve('computerTurn');
                     }
@@ -347,33 +347,46 @@
             y = ($('#field').height() / 2),
             dx = 1,
             dy = 1,
-            gameInitialized = false,
             paddleX = ($('#field').width() / 2),
             lives = 2,
-            bricksBroken = 0,
-            currentRound = 0;
+            currentRound = 0,
+            speed = 5;
         const paddle = $('#paddle');
 
         function gameFlow() {
-            var deferred = $.Deferred();
+            var deferredMain = $.Deferred();
             switch (gameState) {
                 case 'transition':
                     setBricks();
                     transitionToBreakout().done(function () {
                         gameState = 'showBricks';
-                        setTimeout(deferred.resolve, 500);
+                        setTimeout(deferredMain.resolve, 500);
                     });
                     break;
                 case 'showBricks':
                     showBricks().done(function () {
-                        if (paddle.hasClass('hidden')) {
-                            gameState = 'showInterface';
-                            setTimeout(showInterface, 300);
-                        } else {}
+                        gameState = 'showInterface';
+                        setTimeout(deferredMain.resolve, 300);
+                    });
+                    break;
+                case 'showInterface':
+                    showInterface().done(function () {
+                        gameState = 'draw';
+                        setTimeout(gameFlow, 300);
+                    });
+                    break;
+                case 'draw':
+                    draw().done(function (next) {
+                        switch (next) {
+                            case 'loseLife':
+                                break;
+                            case 'roundProgress':
+                                break;
+                        }
                     });
                     break;
             }
-            deferred.promise().done(gameFlow);
+            deferredMain.promise().done(gameFlow);
         }
 
         function transitionToBreakout() {
@@ -445,11 +458,11 @@
             });
             var i = 0;
             // here, a timed recursive function is used to show the bricks one by one in a rapid succession (but not all at once) for increased visual appeal
-            (function foo() {
+            (function interval() {
                 if (i < 30) {
                     $('.brick').eq(i).toggleClass('hidden active-brick');
                     i++;
-                    setTimeout(foo, 100);
+                    setTimeout(interval, 100);
                 } else {
                     deferred.resolve();
                 }
@@ -459,12 +472,20 @@
 
         function showInterface() {
             // show the hidden lives and animate them into their full size
+            var livesDeferred = [$.Deferred(), $.Deferred()],
+                deferred1 = $.Deferred(),
+                deferred2 = $.Deferred(),
+                deferred3 = $.Deferred(),
+                deferredMain = $.Deferred();
             $('.life').toggleClass('hidden').addClass('rotating');
             $('.life').each(function (index, element) {
-                growBall(element, true);
+                growBall(element).done(livesDeferred[index].resolve);
             });
+            $.when.apply($, livesDeferred).done(deferred1.resolve);
             if ($('#round-counter').hasClass('hidden')) {
-                $('#round-counter').css('color', 'white').text(currentRound).fadeIn(700);
+                $('#round-counter').css('color', 'white').text(currentRound).fadeIn(700, deferred2.resolve);
+            } else {
+                deferred2.resolve();
             }
             // the paddle receives the same animation treatment as the lives
             paddle.removeClass('hidden').animate({
@@ -472,39 +493,13 @@
                 'width': '128px',
                 'left': '500px',
                 'top': '546px'
-            }, 700);
+            }, 700, deferred3.resolve);
+            $.when(deferred1, deferred2, deferred3).done(deferredMain.resolve);
+            return deferredMain.promise();
         }
 
-        function showLives() {
-            // show the hidden lives and animate them into their full size
-            $('.life').toggleClass('hidden').addClass('rotating');
-            $('.life').each(function (index, element) {
-                growBall(element, true);
-            });
-            if (!gameInitialized) {
-                showPaddle();
-            }
-        }
-
-        // this function also shows the round counter
-        function showPaddle() {
-            // the round counter has some properties set and then fades into existence
-            $('#round-counter').css('color', 'white').text(currentRound).fadeIn(700);
-            // the paddle receives the same animation treatment as the lives
-            paddle.removeClass('hidden').animate({
-                'height': '24px',
-                'width': '128px',
-                'left': '500px',
-                'top': '546px'
-            }, 700, function () {
-                // after a delay, the main draw function is called, which starts the ball moving
-                gameInitialized = true;
-                setTimeout(draw, 300);
-            });
-        }
 
         function roundProgress() {
-            bricksBroken = 0;
             currentRound++;
             gameState = 'breakoutRoundProgress';
             // freeze the ball's position
@@ -521,13 +516,13 @@
         }
 
         function checkBrickCollision() {
+            var deferred = $.Deferred();
             $('.active-brick').each(function (index, element) {
                 // if, on the next interval, the ball would be moved inside the brick being checked...
                 if (y + dy + 32 > parseInt($(element).css('top')) && x + dx < parseInt($(element).css('left')) + 100 && y + dy < parseInt($(element).css('top')) + 32 && x + dx + 32 > parseInt($(element).css('left'))) {
                     $(element).toggleClass('active-brick hidden');
-                    bricksBroken++;
                     if ($('.brick.hidden').length == $('.brick').length) {
-                        roundProgress();
+                        deferred.resolve();
                     } else {
                         // on which axis should the ball be reflected?
                         // if the ball is not already both above the brick's bottom boundary and below the brick's top boundary, then it must be colliding with the brick from either the top or the bottom
@@ -539,9 +534,11 @@
                             // therefore, the ball's x-asis movement should be reversed
                             dx = -dx;
                         }
+                        deferred.reject();
                     }
                 }
             });
+            return deferred.promise();
         }
 
         function checkPaddleCollision() {
@@ -560,6 +557,7 @@
         }
 
         function checkEdgeCollision() {
+            var deferred = $.Deferred();
             // if the ball is colliding with the top...
             if (y + dy < 0) {
                 dy = -dy;
@@ -570,10 +568,11 @@
             }
             // if the ball is colliding with the bottom...
             if (y + dy  + 32 > $('#field').height()) {
-                // freeze the ball's movement
-                gameState = 'breakoutLosingLife';
-                loseLife();
+                deferred.resolve();
+            } else {
+                deferred.reject();
             }
+            return deferred.promise();
         }
 
         function shrinkBall(ball, life, complete) {
@@ -597,7 +596,7 @@
             });
         }
 
-        function growBall(ball, life) {
+        function growBall(ball) {
             var deferred1 = $.Deferred(),
                 deferred2 = $.Deferred(),
                 deferred3 = $.Deferred(),
@@ -618,7 +617,7 @@
                 'width': '16px'
             }, 500).promise().done(deferred3.resolve);
             $.when(deferred1, deferred2, deferred3).done(deferredMain.resolve);
-            return deferredmain.promise();
+            return deferredMain.promise();
         }
 
         // this function is for putting the ball back in the center of the field
@@ -673,7 +672,6 @@
                                 $('#gameover-message').addClass('hidden');
                                 $('#gameover-text').css('opacity', '0');
                                 $('#startagain-text').css('opacity', '0');
-                                bricksBroken = 0;
                                 currentRound = 0;
                                 lives = 2;
                                 $('#round-counter').text(currentRound);
@@ -691,7 +689,8 @@
         }
 
         function draw() {
-            gameState = 'breakout';
+            var deferred = $.Deferred();
+            $(document).off('mousemove');
             // this event listener is placed here so that the paddle does not start moving until this function is called
             // it is what allows the mouse to control the paddle
             $(document).mousemove(function(e) {
@@ -707,23 +706,28 @@
                 }
                 paddle.css('left', paddleX);
             });
-            // this is what actually causes the ball to move, another timed recursive function
-            (function foo() {
-                // on every run, check for collisions and add to the ball's position value
-                if (gameState == 'breakout') {
-                    checkBrickCollision();
+            // this is what actually causes the ball to move, a timed recursive function
+            (function interval() {
+                if (deferred.state() == 'pending') {
+                    // on every run, check for collisions and add to the ball's position value
+                    checkEdgeCollision().done(function () {
+                        deferred.resolve('loseLife');
+                    });
+                    checkBrickCollision().done(function () {
+                        deferred.resolve('roundProgress');
+                    });
                     checkPaddleCollision();
-                    checkEdgeCollision();
                     x += dx;
                     y += dy;
+                    // also update the ball's position
+                    buttonOuter.css({
+                        'top': y,
+                        'left': x
+                    });
+                    setTimeout(interval, speed);
                 }
-                // on every run, update the ball's position
-                buttonOuter.css({
-                    'top': y,
-                    'left': x
-                });
-                setTimeout(foo, 5);
             })();
+            return deferred.promise();
         }
 
         gameFlow();
