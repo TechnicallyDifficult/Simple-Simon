@@ -1,4 +1,4 @@
-// $(document).ready(function () {
+$(document).ready(function () {
     'use strict';
 
     const buttons = $('.game-btn');
@@ -349,6 +349,7 @@
             dy = 1,
             paddleX = ($('#field').width() / 2),
             lives = 2,
+            currentLives = lives,
             currentRound = 0,
             speed = 5;
         const paddle = $('#paddle');
@@ -357,7 +358,7 @@
             var deferred = $.Deferred();
             switch (gameState) {
                 case 'transition':
-                    setBricks();
+                    setUp();
                     transitionToBreakout().done(function () {
                         gameState = 'showBricks';
                         setTimeout(deferred.resolve, 500);
@@ -379,6 +380,7 @@
                     draw().done(function (next) {
                         switch (next) {
                             case 'loseLife':
+
                                 break;
                             case 'roundProgress':
                                 gameState = 'roundProgress';
@@ -404,8 +406,7 @@
                 deferred2 = $.Deferred(),
                 deferred3 = $.Deferred(),
                 deferred4 = $.Deferred(),
-                deferred5 = $.Deferred(),
-                deferredMain = $.Deferred();
+                deferred5 = $.Deferred();
             $('#round-counter').fadeOut(1000, 'linear', function () {
                 deferred1.resolve();
             });
@@ -432,8 +433,7 @@
                     }, 700, deferred5.resolve);
                 }, 300);
             });
-            $.when(deferred3, deferred4, deferred5).done(deferredMain.resolve);
-            return deferredMain.promise();
+            return $.when(deferred3, deferred4, deferred5).promise();
         }
 
         function chooseColor() {
@@ -449,15 +449,20 @@
             }
         }
 
-        function setBricks() {
+        function setUp() {
             // set the position of each brick
             $('.brick').each(function (index, element) {
                 $(element).css({
                     // convert index to string, find the last character in the index, convert it back to an interger, and multiply that by the width of each brick (100). This will be the value to offset the brick from the left by
                     'left': parseInt(index.toString().substring(index.toString().length - 1)) * 100,
+                    // for the top, divide the index by 10 (effectively moving the decimal point one place to the left) and then round the resulting number down (this way, the result given a brick with a single-digit index is 0), and multiply that by the height of one brick, then add 80 for the offset from the top
                     'top': (parseInt(index / 10) * 32) + 80
                 });
             });
+            // set the number of lives to be displayed
+            for (var i = 1; i <= lives; i++) {
+                $('#lives-container').append('<div class="life-outer"><div class="life rotating hidden"><div class="red corner-top-left"></div><div class="yellow corner-top-right"></div><div class="green corner-bottom-left"></div><div class="blue corner-bottom-right"></div></div></div>');
+            }
         }
 
         function showBricks() {
@@ -481,16 +486,19 @@
         }
 
         function showInterface() {
-            // show the hidden lives and animate them into their full size
-            var livesDeferred = [$.Deferred(), $.Deferred()],
+            var livesDeferred = [],
                 deferred1 = $.Deferred(),
                 deferred2 = $.Deferred(),
-                deferred3 = $.Deferred(),
-                deferredMain = $.Deferred();
-            $('.life').toggleClass('hidden').addClass('rotating');
-            $('.life').each(function (index, element) {
+                deferred3 = $.Deferred();
+            // this is here so that the number of lives can be easily modified by changing only one variable
+            $('.life').each(function () {
+                livesDeferred.push($.Deferred());
+            });
+            $('.life').toggleClass('hidden').addClass('rotating')
+            .each(function (index, element) {
                 growBall(element).done(livesDeferred[index].resolve);
             });
+            // show the hidden lives and animate them into their full size
             $.when.apply($, livesDeferred).done(deferred1.resolve);
             if ($('#round-counter').hasClass('hidden')) {
                 $('#round-counter').css('color', 'white').text(currentRound).fadeIn(700, deferred2.resolve);
@@ -504,8 +512,7 @@
                 'left': '500px',
                 'top': '546px'
             }, 700, deferred3.resolve);
-            $.when(deferred1, deferred2, deferred3).done(deferredMain.resolve);
-            return deferredMain.promise();
+            return $.when(deferred1, deferred2, deferred3).promise();
         }
 
         function roundProgress() {
@@ -606,8 +613,7 @@
 
         function growBall(ball) {
             var deferred1 = $.Deferred(),
-                deferred2 = $.Deferred(),
-                deferredMain = $.Deferred();
+                deferred2 = $.Deferred();
             $(ball).removeClass('hidden');
             $(ball).animate({
                 'top': '0px',
@@ -621,8 +627,7 @@
                 'height': '16px',
                 'width': '16px'
             }, 500).promise().done(deferred2.resolve);
-            $.when(deferred1, deferred2).done(deferredMain.resolve);
-            return deferredMain.promise();
+            return $.when(deferred1, deferred2).promise();
         }
 
         function resetBall() {
@@ -642,19 +647,17 @@
         }
 
         function loseLife() {
-            // first, the main ball shrinks out of existence
             shrinkBall(buttonInner).done(function () {
-                if (lives > 0) {
-                    if (lives >= 1) {
+                if (currentLives > 0) {
+                    if (currentLives >= 1) {
                         // after a delay, the rightmost life is shrunk out of sight and then the ball is reset
-                        shrinkBall($('.life').eq(lives - 1)).done(resetBall);
+                        shrinkBall($('.life').eq(currentLives - 1)).done(resetBall);
                     } else {
                         resetBall();
                     }
-                    lives--;
+                    currentLives--;
                 } else {
                     // if the player is out of lives...
-                    gameState = 'breakoutGameOver';
                     gameOver();
                 }
             });
@@ -681,7 +684,7 @@
                                 $('#gameover-text').css('opacity', '0');
                                 $('#startagain-text').css('opacity', '0');
                                 currentRound = 0;
-                                lives = 2;
+                                currentLives = lives;
                                 $('#round-counter').text(currentRound);
                                 showBricks();
                                 showLives();
@@ -742,4 +745,4 @@
     }
 
     simon();
-// });
+});

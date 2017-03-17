@@ -26,7 +26,6 @@
 
 body {
     user-select: none;
-    font-size: 0;
     cursor: default;
 }
 
@@ -43,13 +42,6 @@ body {
     border: 3px solid;
     float: left;
     position: relative;
-}
-
-.life-corner {
-    height: 0px;
-    width: 0px;
-    border: 1px solid;
-    float: left;
 }
 
 .corner-top-left {
@@ -121,6 +113,13 @@ body {
     -o-animation: fadeToBlack 1s linear 1;
     animation: fadeToBlack 1s linear 1;
     animation-fill-mode: forwards;
+}
+
+.life>div {
+    height: 0px;
+    width: 0px;
+    border: 1px solid;
+    float: left;
 }
 
 #r-btn {
