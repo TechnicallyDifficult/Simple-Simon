@@ -381,6 +381,8 @@
                             case 'loseLife':
                                 break;
                             case 'roundProgress':
+                                gameState = roundProgress;
+                                deferred.resolve();
                                 break;
                         }
                     });
@@ -501,17 +503,13 @@
 
         function roundProgress() {
             currentRound++;
-            gameState = 'breakoutRoundProgress';
-            // freeze the ball's position
-            setTimeout(function () {
-                shrinkBall(buttonInner, false, function () {
-                    // new bricks appear
-                    showBricks();
-                    setTimeout(function () {
-                        $('#round-counter').text(currentRound);
-                        resetBall();
-                    }, 3000);
-                });
+            shrinkBall(buttonInner, false, function () {
+                // new bricks appear
+                showBricks();
+                setTimeout(function () {
+                    $('#round-counter').text(currentRound);
+                    resetBall();
+                }, 3000);
             });
         }
 
@@ -576,12 +574,13 @@
         }
 
         function shrinkBall(ball, life, complete) {
-            // lives behave slightly differently than the ball for the purposes of this function
-            if (life) {
-                ball.animate({
-                    'top': parseInt($(ball).css('top')) + 14,
-                }, 500);
-            }
+            var deferred1 = $.Deferred();
+            ball.animate({
+                'top': parseInt($(ball).css('top')) + 14,
+            }, 500, deferred1.resolve);
+            ball.animate({
+
+            })
             ball.children().animate({
                 'height': '0px',
                 'width': '0px'
@@ -599,24 +598,21 @@
         function growBall(ball) {
             var deferred1 = $.Deferred(),
                 deferred2 = $.Deferred(),
-                deferred3 = $.Deferred(),
                 deferredMain = $.Deferred();
             $(ball).removeClass('hidden');
             $(ball).animate({
-                'top': '0px'
-            }, 500, deferred1.resolve);
-            $(ball).animate({
+                'top': '0px',
                 'height': '32px',
                 'width': '32px'
             }, {
                 'duration': 500,
                 'queue': false
-            }).promise().done(deferred2.resolve);
+            }).promise().done(deferred1.resolve);
             $(ball).children().animate({
                 'height': '16px',
                 'width': '16px'
-            }, 500).promise().done(deferred3.resolve);
-            $.when(deferred1, deferred2, deferred3).done(deferredMain.resolve);
+            }, 500).promise().done(deferred2.resolve);
+            $.when(deferred1, deferred2).done(deferredMain.resolve);
             return deferredMain.promise();
         }
 
