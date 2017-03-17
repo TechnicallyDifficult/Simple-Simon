@@ -354,25 +354,25 @@
         const paddle = $('#paddle');
 
         function gameFlow() {
-            var deferredMain = $.Deferred();
+            var deferred = $.Deferred();
             switch (gameState) {
                 case 'transition':
                     setBricks();
                     transitionToBreakout().done(function () {
                         gameState = 'showBricks';
-                        setTimeout(deferredMain.resolve, 500);
+                        setTimeout(deferred.resolve, 500);
                     });
                     break;
                 case 'showBricks':
                     showBricks().done(function () {
                         gameState = 'showInterface';
-                        setTimeout(deferredMain.resolve, 300);
+                        setTimeout(deferred.resolve, 300);
                     });
                     break;
                 case 'showInterface':
                     showInterface().done(function () {
                         gameState = 'draw';
-                        setTimeout(gameFlow, 300);
+                        setTimeout(deferred.resolve, 300);
                     });
                     break;
                 case 'draw':
@@ -381,14 +381,22 @@
                             case 'loseLife':
                                 break;
                             case 'roundProgress':
-                                gameState = roundProgress;
+                                gameState = 'roundProgress';
                                 deferred.resolve();
                                 break;
                         }
                     });
                     break;
+                case 'roundProgress':
+                    roundProgress().done(function () {
+                        resetBall().done(function () {
+                            gameState = 'draw';
+                            deferred.resolve();
+                        });
+                    });
+                    break;
             }
-            deferredMain.promise().done(gameFlow);
+            deferred.promise().done(gameFlow);
         }
 
         function transitionToBreakout() {
@@ -500,17 +508,17 @@
             return deferredMain.promise();
         }
 
-
         function roundProgress() {
+            var deferred = $.Deferred();
             currentRound++;
-            shrinkBall(buttonInner, false, function () {
+            shrinkBall(buttonInner).done(function () {
                 // new bricks appear
-                showBricks();
-                setTimeout(function () {
+                showBricks().done(function () {
                     $('#round-counter').text(currentRound);
-                    resetBall();
-                }, 3000);
+                    deferred.resolve();
+                });
             });
+            return deferred.promise();
         }
 
         function checkBrickCollision() {
@@ -573,26 +581,27 @@
             return deferred.promise();
         }
 
-        function shrinkBall(ball, life, complete) {
-            var deferred1 = $.Deferred();
+        function shrinkBall(ball) {
+            var deferred1 = $.Deferred(),
+                deferred2 = $.Deferred(),
+                deferredMain = $.Deferred();
             ball.animate({
                 'top': parseInt($(ball).css('top')) + 14,
+                'height': '0px',
+                'width': '0px'
             }, 500, deferred1.resolve);
-            ball.animate({
-
-            })
             ball.children().animate({
                 'height': '0px',
                 'width': '0px'
-            }, 500).promise().done(function () {
+            }, 500).promise().done(deferred2.resolve);
+            $.when(deferred1, deferred2).done(function () {
                 ball.addClass('hidden').css({
                     'height': '4px',
                     'width': '4px'
                 });
-                if (typeof complete == 'function') {
-                    complete();
-                }
+                deferredMain.resolve();
             });
+            return deferredMain.promise();
         }
 
         function growBall(ball) {
@@ -616,26 +625,29 @@
             return deferredMain.promise();
         }
 
-        // this function is for putting the ball back in the center of the field
         function resetBall() {
+            var deferred = $.Deferred();
+            dx = 1;
+            dy = 1;
             x = ($('#field').width() / 2);
             y = ($('#field').height() / 2);
-            growBall(buttonInner, false, function () {
-                setTimeout(function () {
-                    gameState = 'breakout';
-                    dx = 1;
-                    dy = 1;
-                }, 500);
+            $(buttonOuter).css({
+                'top': y,
+                'left': x
             });
+            growBall(buttonInner).done(function () {
+                setTimeout(deferred.resolve, 500);
+            });
+            return deferred.promise();
         }
 
         function loseLife() {
             // first, the main ball shrinks out of existence
-            shrinkBall(buttonInner, false, function () {
+            shrinkBall(buttonInner).done(function () {
                 if (lives > 0) {
                     if (lives >= 1) {
                         // after a delay, the rightmost life is shrunk out of sight and then the ball is reset
-                        shrinkBall($('.life').eq(lives - 1), true, resetBall);
+                        shrinkBall($('.life').eq(lives - 1)).done(resetBall);
                     } else {
                         resetBall();
                     }
