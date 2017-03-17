@@ -7,17 +7,21 @@
     </head>
     <body>
         <div id="lives-container">
-            <div id="life-1" class="life rotating hidden">
-                <div class="life-corner red corner-top-left"></div>
-                <div class="life-corner yellow corner-top-right"></div>
-                <div class="life-corner green corner-bottom-left"></div>
-                <div class="life-corner blue corner-bottom-right"></div>
+            <div class="life-outer">
+                <div id="life-1" class="life rotating hidden">
+                    <div class="life-corner red corner-top-left"></div>
+                    <div class="life-corner yellow corner-top-right"></div>
+                    <div class="life-corner green corner-bottom-left"></div>
+                    <div class="life-corner blue corner-bottom-right"></div>
+                </div>
             </div>
-            <div id="life-2" class="life rotating hidden">
-                <div class="life-corner red corner-top-left"></div>
-                <div class="life-corner yellow corner-top-right"></div>
-                <div class="life-corner green corner-bottom-left"></div>
-                <div class="life-corner blue corner-bottom-right"></div>
+            <div class="life-outer">
+                <div id="life-2" class="life rotating hidden">
+                    <div class="life-corner red corner-top-left"></div>
+                    <div class="life-corner yellow corner-top-right"></div>
+                    <div class="life-corner green corner-bottom-left"></div>
+                    <div class="life-corner blue corner-bottom-right"></div>
+                </div>
             </div>
         </div>
         <div id="round-counter"></div>
@@ -52,11 +56,13 @@
             <div class="brick hidden"></div>
             <div class="brick hidden"></div>
             <div class="brick hidden"></div>
-            <div id="button-container">
+            <div id="button-outer">
+                <div id="button-inner">
                     <div id="r-btn" class="enabled-btn game-btn red"></div>
                     <div id="y-btn" class="enabled-btn game-btn yellow hidden"></div>
                     <div id="g-btn" class="enabled-btn game-btn green hidden"></div>
                     <div id="b-btn" class="enabled-btn game-btn blue hidden"></div>
+                </div>
             </div>
             <div id="gameover-message" class="hidden">
                 <h1 id="gameover-text">GAME OVER</h1>

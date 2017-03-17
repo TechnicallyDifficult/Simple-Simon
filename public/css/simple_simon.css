@@ -70,13 +70,18 @@ body {
 }
 
 .life {
+    height: 4px;
+    width: 4px;
+    margin: auto;
+    position: relative;
+    top: 14px;
+}
+
+.life-outer {
     float: left;
     margin: 0 8px;
     height: 32px;
     width: 32px;
-    position: relative;
-    top: 16px;
-    left: 16px;
 }
 
 .enabled-btn:active {
@@ -162,7 +167,14 @@ body {
     position: relative;
 }
 
-#button-container {
+#button-inner {
+    height: 444px;
+    width: 444px;
+    position: relative;
+    margin: auto;
+}
+
+#button-outer {
     height: 444px;
     width: 444px;
     position: absolute;
