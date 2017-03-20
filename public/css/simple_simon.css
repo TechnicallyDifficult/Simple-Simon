@@ -87,7 +87,7 @@ body {
     position: absolute;
 }
 
-.red {
+.red, .life>div.red {
     background-color: #ea4335;
     border-color: #AB3127;
 }
@@ -118,7 +118,8 @@ body {
 .life>div {
     height: 0px;
     width: 0px;
-    border: 1px solid;
+    border-width: 1px;
+    border-style: solid;
     float: left;
 }
 
