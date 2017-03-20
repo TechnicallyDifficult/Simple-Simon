@@ -149,14 +149,21 @@ body {
     right: -2000px;
 }
 
+#paddle-outer {
+    position: absolute;
+    height: 24px;
+    width: 128px;
+    top: 546px;
+}
+
 #paddle {
     background-color: #4D5057;
     border: 2px solid #393B40;
     height: 0;
     width: 0;
-    position: absolute;
-    top: 558px;
-    left: 564px;
+    position: relative;
+    top: 12px;
+    margin: auto;
 }
 
 #field {

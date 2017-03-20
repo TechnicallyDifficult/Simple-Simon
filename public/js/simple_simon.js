@@ -342,59 +342,79 @@ $(document).ready(function () {
     }
 
     function breakout() {
+        const paddle = $('#paddle-outer');
         var gameState = 'transition',
             x = ($('#field').width() / 2),
             y = ($('#field').height() / 2),
             dx = 1,
             dy = 1,
-            paddleX = ($('#field').width() / 2),
             lives = 2,
             currentLives = lives,
             currentRound = 0,
-            speed = 5;
-        const paddle = $('#paddle');
+            speed = 5,
+            ballRadius = 16,
+            paddleLeft = (($('#field').width() / 2)) - (paddle.width() / 2);
 
-        function gameFlow() {
+        function gameFlow(next) {
             var deferred = $.Deferred();
-            switch (gameState) {
-                case 'transition':
-                    setUp();
+            switch (next) {
+                case 'setup':
+                    setup();
                     transitionToBreakout().done(function () {
-                        gameState = 'showBricks';
-                        setTimeout(deferred.resolve, 500);
+                        setTimeout(function () {
+                            deferred.resolve('showBricks')
+                        }, 500);
                     });
                     break;
                 case 'showBricks':
                     showBricks().done(function () {
-                        gameState = 'showInterface';
-                        setTimeout(deferred.resolve, 300);
+                        setTimeout(function () {
+                            deferred.resolve('showInterface');
+                        }, 300);
                     });
                     break;
                 case 'showInterface':
                     showInterface().done(function () {
-                        gameState = 'draw';
-                        setTimeout(deferred.resolve, 300);
+                        setTimeout(function () {
+                            deferred.resolve('draw');
+                        }, 300);
                     });
                     break;
                 case 'draw':
                     draw().done(function (next) {
                         switch (next) {
                             case 'loseLife':
-
+                                deferred.resolve('loseLife');
                                 break;
                             case 'roundProgress':
-                                gameState = 'roundProgress';
-                                deferred.resolve();
+                                deferred.resolve('roundProgress');
                                 break;
                         }
                     });
                     break;
                 case 'roundProgress':
                     roundProgress().done(function () {
-                        resetBall().done(function () {
-                            gameState = 'draw';
-                            deferred.resolve();
-                        });
+                        deferred.resolve('resetBall');
+                    });
+                    break;
+                case 'resetBall':
+                    resetBall();
+                    growBall(buttonInner).done(function () {
+                        setTimeout(function () {
+                            deferred.resolve('draw');
+                        }, 500);
+                    });
+                    break;
+                case 'loseLife':
+                    loseLife().done(function (next) {
+                        switch (next) {
+                            case 'resetBall':
+                                deferred.resolve('resetBall');
+                                break;
+                            case 'gameOver':
+                                deferred.resolve('gameOver');
+                                break;
+                        }
                     });
                     break;
             }
@@ -422,14 +442,14 @@ $(document).ready(function () {
                     }, 700, deferred3.resolve);
                     // as does the container holding them
                     buttonInner.addClass('rotating').animate({
-                        'height': '32px',
-                        'width': '32px',
+                        'height': ballRadius * 2,
+                        'width': ballRadius * 2,
                     }, 700, deferred4.resolve);
                     buttonOuter.animate({
-                        'height': '32px',
-                        'width': '32px',
-                        'top': y,
-                        'left': x
+                        'height': ballRadius * 2,
+                        'width': ballRadius * 2,
+                        'top': y - ballRadius,
+                        'left': x - ballRadius
                     }, 700, deferred5.resolve);
                 }, 300);
             });
@@ -449,7 +469,7 @@ $(document).ready(function () {
             }
         }
 
-        function setUp() {
+        function setup() {
             // set the position of each brick
             $('.brick').each(function (index, element) {
                 $(element).css({
@@ -460,9 +480,10 @@ $(document).ready(function () {
                 });
             });
             // set the number of lives to be displayed
-            for (var i = 1; i <= lives; i++) {
+            for (var i = 1; i <= currentLives; i++) {
                 $('#lives-container').append('<div class="life-outer"><div class="life rotating hidden"><div class="red corner-top-left"></div><div class="yellow corner-top-right"></div><div class="green corner-bottom-left"></div><div class="blue corner-bottom-right"></div></div></div>');
             }
+            paddle.css('left', paddleLeft);
         }
 
         function showBricks() {
@@ -506,11 +527,11 @@ $(document).ready(function () {
                 deferred2.resolve();
             }
             // the paddle receives the same animation treatment as the lives
-            paddle.removeClass('hidden').animate({
+            paddle.removeClass('hidden');
+            $('#paddle').removeClass('hidden').animate({
                 'height': '24px',
                 'width': '128px',
-                'left': '500px',
-                'top': '546px'
+                'top': '0px'
             }, 700, deferred3.resolve);
             return $.when(deferred1, deferred2, deferred3).promise();
         }
@@ -528,59 +549,94 @@ $(document).ready(function () {
             return deferred.promise();
         }
 
-        function checkBrickCollision() {
-            var deferred = $.Deferred();
-            $('.active-brick').each(function (index, element) {
-                // if, on the next interval, the ball would be moved inside the brick being checked...
-                if (y + dy + 32 > parseInt($(element).css('top')) && x + dx < parseInt($(element).css('left')) + 100 && y + dy < parseInt($(element).css('top')) + 32 && x + dx + 32 > parseInt($(element).css('left'))) {
-                    $(element).toggleClass('active-brick hidden');
-                    if ($('.brick.hidden').length == $('.brick').length) {
-                        deferred.resolve();
+        function checkCollision(top, left, height, width) {
+            // note that all the passed-in values refer to the element being checked, while all other variables refer to the ball
+            var deferred = $.Deferred(),
+                collision = '';
+            // if, on the next interval, the ball would be moved inside the object being checked...
+            if (y + dy + ballRadius > top && y + dy - ballRadius < top + height && x + dx + ballRadius > left && x + dx - ballRadius < left + width) {
+                // which side of the object is the ball colliding with?
+                if (!(y + ballRadius > top) || !(y - ballRadius < top + height)) {
+                    collision = 'Ycollide';
+                    // which section of the top?
+                    if (x + dx < left + (width / 4)) {
+                        collision += 'L';
+                        deferred.resolve(collision);
+                    } else if (x + dx > left + ((width / 4) * 3)) {
+                        collision += 'R';
+                        deferred.resolve(collision);
                     } else {
-                        // on which axis should the ball be reflected?
-                        // if the ball is not already both above the brick's bottom boundary and below the brick's top boundary, then it must be colliding with the brick from either the top or the bottom
-                        if (!(y + 32 > parseInt($(element).css('top'))) || !(y < parseInt($(element).css('top')) + 32)) {
-                            // therefore, the ball's y-axis movement should be reversed
-                            dy = -dy;
-                        // otherwise, if the ball is not already between both of the brick's side boundaries, then it must be colliding with one of the sides
-                        } else if (!(x + 32 > parseInt($(element).css('left'))) || !(x < parseInt($(element).css('left')) + 100)) {
-                            // therefore, the ball's x-asis movement should be reversed
-                            dx = -dx;
-                        }
-                        deferred.reject();
+                        deferred.resolve(collision);
                     }
+                } else if (!(x + ballRadius > left)) {
+                    collision = 'XcollideL';
+                    deferred.resolve(collision);
+                } else if (!(x - ballRadius < left + width)) {
+                    collision = 'XcollideR';
+                    deferred.resolve(collision);
                 }
+            } else {
+                deferred.reject();
+            }
+            return deferred.promise();
+        }
+
+        function checkBrickCollision() {
+            var deferred = $.Deferred(),
+                event = '';
+            $('.active-brick').each(function (index, element) {
+                checkCollision(parseInt($(element).css('top')), parseInt($(element).css('left')), $(element).height(), $(element).width()).done(function (collision) {
+                    $(element).toggleClass('active-brick hidden');
+                    event = collision.substring(0, 8);
+                    console.log(collision.substring(0, 8));
+                });
             });
+            if ($('.brick.hidden').length == $('.brick').length) {
+            // is the round over?
+                event = 'roundOver';
+            }
+            switch (event) {
+                case 'Xcollide':
+                    dx = -dx;
+                    deferred.reject();
+                    break;
+                case 'Ycollide':
+                    dy = -dy;
+                    deferred.reject();
+                    break;
+                case 'roundOver':
+                    deferred.resolve();
+                    break;
+            }
             return deferred.promise();
         }
 
         function checkPaddleCollision() {
-            // this function uses the same logic as checkBrickCollision to determine whether and how the ball is colliding with the paddle
-            if (y + dy + 32 > parseInt(paddle.css('top')) && y + dy < parseInt(paddle.css('top')) + 24 && x + dx + 32 > paddleX && x + dx < paddleX + 128) {
-                if (!(x < paddleX + 128) || (x + dx + 32 > paddleX + 96)) {
-                    // if the ball is colliding with the right side of the paddle or the rightmost 1/4th of the top of the paddle, set the ball's x-direction movement to the right
-                    dx = 1;
-                } else if (!(x + 32 > paddleX) || (x + dx < paddleX + 32)) {
-                    // otherwise, if the ball is colliding with the left side of the paddle or the leftmost 1/4th of the top of the paddle, set the ball's x-direction movement to the left
-                    dx = -1;
+            checkCollision(parseInt(paddle.css('top')), paddleLeft, paddle.height(), paddle.width()).done(function (collision) {
+                switch (collision.substring(1)) {
+                    case 'collideL':
+                        dx = -1;
+                        break;
+                    case 'collideR':
+                        dx = 1;
+                        break;
                 }
-                // in all cases of the ball colliding with the paddle, reverse the ball's y-direction movement
-                dy = -dy;
-            }
+                dy = -1;
+            });
         }
 
         function checkEdgeCollision() {
             var deferred = $.Deferred();
             // if the ball is colliding with the top...
-            if (y + dy < 0) {
+            if (y + dy - ballRadius < 0) {
                 dy = -dy;
             }
             // if the ball is colliding with the right or the left...
-            if (x + dx + 32 > $('#field').width() || x + dx < 0) {
+            if (x + dx + ballRadius > $('#field').width() || x + dx - ballRadius < 0) {
                 dx = -dx;
             }
             // if the ball is colliding with the bottom...
-            if (y + dy  + 32 > $('#field').height()) {
+            if (y + dy + ballRadius > $('#field').height()) {
                 deferred.resolve();
             } else {
                 deferred.reject();
@@ -588,10 +644,54 @@ $(document).ready(function () {
             return deferred.promise();
         }
 
+        function draw() {
+            var deferred = $.Deferred();
+            enablePaddle();
+            // this is what actually causes the ball to move, a timed recursive function
+            (function interval() {
+                if (deferred.state() == 'pending') {
+                    // on every run, check for collisions and add to the ball's position value
+                    checkBrickCollision().done(function () {
+                        deferred.resolve('roundProgress');
+                    });
+                    checkPaddleCollision();
+                    checkEdgeCollision().done(function () {
+                        deferred.resolve('loseLife');
+                    });
+                    x += dx;
+                    y += dy;
+                    // also update the ball's position
+                    buttonOuter.css({
+                        'top': y - ballRadius,
+                        'left': x - ballRadius
+                    });
+                    setTimeout(interval, speed);
+                }
+            })();
+            return deferred.promise();
+        }
+
+        function enablePaddle() {
+            // in case this event listener has already been set...
+            $(document).off('mousemove');
+            $(document).mousemove(function(e) {
+                // if the mouse cursor moves too far to the left, stop the paddle at the edge of the "field" until the mouse cursor is centered vertically with it again
+                if (e.pageX < $('#field').offset().left + 64) {
+                    paddleLeft = 0;
+                // do the same if the mouse cursor moves too far to the right
+                } else if (e.pageX > $('#field').offset().left + 936) {
+                    paddleLeft = 872;
+                } else {
+                    // otherwise, make the paddle follow the mouse cursor
+                    paddleLeft = e.pageX - $('#field').offset().left - 64;
+                }
+                paddle.css('left', paddleLeft);
+            });
+        }
+
         function shrinkBall(ball) {
             var deferred1 = $.Deferred(),
-                deferred2 = $.Deferred(),
-                deferredMain = $.Deferred();
+                deferred2 = $.Deferred();
             ball.animate({
                 'top': parseInt($(ball).css('top')) + 14,
                 'height': '0px',
@@ -601,14 +701,12 @@ $(document).ready(function () {
                 'height': '0px',
                 'width': '0px'
             }, 500).promise().done(deferred2.resolve);
-            $.when(deferred1, deferred2).done(function () {
+            return $.when(deferred1, deferred2).done(function () {
                 ball.addClass('hidden').css({
                     'height': '4px',
                     'width': '4px'
                 });
-                deferredMain.resolve();
-            });
-            return deferredMain.promise();
+            }).promise();
         }
 
         function growBall(ball) {
@@ -631,36 +729,35 @@ $(document).ready(function () {
         }
 
         function resetBall() {
-            var deferred = $.Deferred();
             dx = 1;
             dy = 1;
-            x = ($('#field').width() / 2);
-            y = ($('#field').height() / 2);
+            x = $('#field').width() / 2;
+            y = $('#field').height() / 2;
             $(buttonOuter).css({
-                'top': y,
-                'left': x
+                'top': y - ballRadius,
+                'left': x - ballRadius
             });
-            growBall(buttonInner).done(function () {
-                setTimeout(deferred.resolve, 500);
-            });
-            return deferred.promise();
         }
 
         function loseLife() {
+            var deferred = $.Deferred();
             shrinkBall(buttonInner).done(function () {
                 if (currentLives > 0) {
                     if (currentLives >= 1) {
                         // after a delay, the rightmost life is shrunk out of sight and then the ball is reset
-                        shrinkBall($('.life').eq(currentLives - 1)).done(resetBall);
+                        shrinkBall($('.life').eq(currentLives - 1)).done(function () {
+                            deferred.resolve(resetBall);
+                        });
                     } else {
-                        resetBall();
+                        deferred.resolve('resetBall');
                     }
                     currentLives--;
                 } else {
                     // if the player is out of lives...
-                    gameOver();
+                    deferred.resolve('gameOver');
                 }
             });
+            return deferred.promise();
         }
 
         function gameOver() {
@@ -699,49 +796,7 @@ $(document).ready(function () {
             });
         }
 
-        function draw() {
-            var deferred = $.Deferred();
-            $(document).off('mousemove');
-            // this event listener is placed here so that the paddle does not start moving until this function is called
-            // it is what allows the mouse to control the paddle
-            $(document).mousemove(function(e) {
-                // if the mouse cursor moves too far to the left, stop the paddle at the edge of the "field" until the mouse cursor is centered vertically with it again
-                if (e.pageX < $('#field').offset().left + 64) {
-                    paddleX = 0;
-                // do the same if the mouse cursor moves too far to the right
-                } else if (e.pageX > $('#field').offset().left + 936) {
-                    paddleX = 872;
-                } else {
-                    // otherwise, make the paddle follow the mouse cursor
-                    paddleX = e.pageX - $('#field').offset().left - 64;
-                }
-                paddle.css('left', paddleX);
-            });
-            // this is what actually causes the ball to move, a timed recursive function
-            (function interval() {
-                if (deferred.state() == 'pending') {
-                    // on every run, check for collisions and add to the ball's position value
-                    checkEdgeCollision().done(function () {
-                        deferred.resolve('loseLife');
-                    });
-                    checkBrickCollision().done(function () {
-                        deferred.resolve('roundProgress');
-                    });
-                    checkPaddleCollision();
-                    x += dx;
-                    y += dy;
-                    // also update the ball's position
-                    buttonOuter.css({
-                        'top': y,
-                        'left': x
-                    });
-                    setTimeout(interval, speed);
-                }
-            })();
-            return deferred.promise();
-        }
-
-        gameFlow();
+        gameFlow('setup');
     }
 
     simon();
