@@ -317,14 +317,15 @@ $(document).ready(function () {
 		var x = ($('#field').width() / 2),
 			y = ($('#field').height() / 2),
 			dx = 1,
-			dy = -1,
+			dy = 1,
 			lives = 2,
 			currentLives = lives,
 			currentRound = 0,
-			speed = 10,
+			speed = 5,
 			ballRadius = 16,
-			paddleLeft = ($('#field').width() / 2) - 128,
+			paddleLeft = ($('#field').width() / 2) - 64,
 			ballImmune = false;
+		paddle.css('left', paddleLeft);
 
 		function gameFlow(next) {
 			switch (next) {
@@ -344,8 +345,8 @@ $(document).ready(function () {
 				case 'showInterface':
 					showInterface()
 					.done(function () {
+						enablePaddle();
 						setTimeout(function () {
-							enablePaddle();
 							gameFlow('draw');
 						}, 300);
 					});
@@ -388,7 +389,20 @@ $(document).ready(function () {
 					});
 					break;
 				case 'gameOver':
-
+					$(document).off('mousemove');
+					gameOver().done(function () {
+						currentRound = 0;
+						currentLives = lives;
+						paddleLeft = ($('#field').width() / 2) - 64;
+						paddle.css('left', paddleLeft);
+						$('#round-counter').text(currentRound);
+						showInterface()
+						.done(enablePaddle);
+						showBricks()
+						.done(function () {
+							gameFlow('resetBall');
+						});
+					});
 					break;
 			}
 		}
@@ -455,7 +469,6 @@ $(document).ready(function () {
 			for (var i = 1; i <= currentLives; i++) {
 				$('#lives-container').append('<div class="life-outer"><div class="life rotating hidden"><div class="red corner-top-left"></div><div class="yellow corner-top-right"></div><div class="green corner-bottom-left"></div><div class="blue corner-bottom-right"></div></div></div>');
 			}
-			paddle.css('left', paddleLeft);
 		}
 
 		function showBricks() {
@@ -496,8 +509,9 @@ $(document).ready(function () {
 			});
 			// show the hidden lives and animate them into their full size
 			$.when.apply($, livesDeferred).done(deferred1.resolve);
-			if ($('#round-counter').hasClass('hidden')) {
+			if ($('#round-counter').css('display') == 'none') {
 				$('#round-counter').css('color', 'white')
+				.removeClass('hidden')
 				.text(currentRound)
 				.fadeIn(700, deferred2.resolve);
 			} else {
@@ -519,10 +533,10 @@ $(document).ready(function () {
 			currentRound++;
 			shrinkBall(buttonInner)
 			.done(function () {
+				$('#round-counter').text(currentRound);
 				// new bricks appear
 				showBricks()
 				.done(function () {
-					$('#round-counter').text(currentRound);
 					deferred.resolve();
 				});
 			});
@@ -647,7 +661,6 @@ $(document).ready(function () {
 
 		function enablePaddle() {
 			// in case this event listener has already been set...
-			$(document).off('mousemove');
 			$(document).mousemove(function(e) {
 				if (e.pageX < $('#field').offset().left + 64) {
 					// even if the mouse cursor goes there, don't move the paddle too far to the left
@@ -739,13 +752,17 @@ $(document).ready(function () {
 		}
 
 		function gameOver() {
-			// first all the bricks fade out
-			$('.brick').animate({ 'opacity': 0 }, 1000).promise()
+			var deferred = $.Deferred();
+			$('.brick, #paddle-outer').removeClass('active-brick')
+			.animate({ 'opacity': '0' }, 1000).promise()
 			.done(function () {
-				// then some properties are set on them so that the game can be easily restarted
-				$('.brick').removeClass('active-brick')
-				.addClass('hidden')
-				.css('opacity', '100');
+				$('.brick, #paddle-outer').addClass('hidden')
+				.css('opacity', 100);
+				$('#paddle').css({
+					'height': 0,
+					'width': 0,
+					'top': '12px'
+				});
 				setTimeout(function () {
 					// after a delay, the game over message appears
 					$('#gameover-message').removeClass('hidden');
@@ -754,25 +771,19 @@ $(document).ready(function () {
 						// then after another delay, another message appears
 						$('#startagain-text').css('opacity', '100');
 						setTimeout(function () {
-							// finally, after one more delay, the player is able to click to restart the game
+							// finally, after one more brief delay, the player is able to click to restart the game
 							$(document).click(function () {
+								$(document).off('click');
 								$('#gameover-message').addClass('hidden');
 								$('#gameover-text').css('opacity', '0');
 								$('#startagain-text').css('opacity', '0');
-								currentRound = 0;
-								currentLives = lives;
-								$('#round-counter').text(currentRound);
-								showBricks();
-								showLives();
-								setTimeout(function () {
-									resetBall();
-								}, 3000);
-								$(document).off('click');
+								deferred.resolve();
 							});
 						}, 300);
 					}, 1000);
 				}, 1000);
 			});
+			return deferred.promise();
 		}
 
 		gameFlow('setup');
